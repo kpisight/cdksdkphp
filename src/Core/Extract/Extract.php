@@ -7,6 +7,7 @@ class Extract {
     public $startDate = 'qparamStartDate';
     public $endDate = 'qparamEndDate';
     public $reportType = 'reportType';
+    public $deltaDate = 'deltaDate';
 
     public function queryBuilder($query, $data = []){
         $keys = $this->extractKeys($data);
@@ -42,6 +43,12 @@ class Extract {
         ];
     }
 
+    public function setDeltaDate($value){
+        return [
+            $this->deltaDate => $value
+        ];
+    }
+
     public function setReportType($value){
         return [
             $this->reportType => $value
@@ -54,7 +61,8 @@ class Extract {
             $this->queryId,
             $this->startDate,
             $this->endDate,
-            $this->reportType
+            $this->reportType,
+            $this->deltaDate
         ];
     }
 
@@ -65,6 +73,7 @@ class Extract {
             case $this->startDate : return $this->setStartDate($value); break;
             case $this->endDate : return $this->setEndDate($value); break;
             case $this->reportType : return $this->setReportType($value); break;
+            case $this->deltaDate : return $this->setDeltaDate($value); break;
         }
     }
 

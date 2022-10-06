@@ -4,6 +4,7 @@ include_once __DIR__ . '/../Http/Request.php';
 include_once __DIR__ . '/Extract/Extract.php';
 include_once __DIR__ . '/../Response/Response.php';
 include_once __DIR__ . '/Model/ServiceRo.php';
+include_once __DIR__ . '/Model/Employee.php';
 include_once __DIR__ . '/Model/Types.php';
 
 class Core {
@@ -18,6 +19,7 @@ class Core {
         $this->extract = new Extract();
         $this->response = new Response();
         $this->serviceRo = new ServiceRo();
+        $this->employee = new Employee();
         $this->types = new Types();
     }
 
@@ -61,21 +63,27 @@ class Core {
 
         $extractData = [];
         foreach($items[$responseObj] as $item){
-            if($this->lines){
+            
+            if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
+            {
+
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
                     for($i=0;$i<$lineCount;$i++){
                         $extractData[] = $this->parseResponse($item,$map,$i);
                     }
                 }
+
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
             }
         }
+
         return $extractData;
     }
 
     private function parseResponse($data,$map,$number = 0){
+
         $response = [];
         $fields = array_values($map);
         $keys = array_keys($map);
@@ -83,7 +91,9 @@ class Core {
         for($i=0;$i<$count;$i++){
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
-                    $response[$keys[$i]] = $data[$fields[$i]]['V'][$number];
+                    if(isset($data[$fields[$i]]['V'][$number])){
+                        $response[$keys[$i]] = $data[$fields[$i]]['V'][$number];
+                    }
                 }else {
                     $response[$keys[$i]] = $data[$fields[$i]]['V'];
                 }
@@ -91,6 +101,7 @@ class Core {
                 $response[$keys[$i]] = $this->convertBlankArrayData($data[$fields[$i]]);
             }
         }
+
         return $response;
     }
 
