@@ -47,7 +47,7 @@ class Types {
     }
 
     public function helpEmployeeExtractQueryId(){
-        return $this->HELP_EMPLOYEE_DELTA_QUERYID;
+        return $this->HELP_EMPLOYEE_QUERYID;
     }
 
     public function helpEmployeeDeltaExtract(){
