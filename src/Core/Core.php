@@ -57,7 +57,8 @@ class Core {
             return [
                 'status' => 'error',
                 'message' => 'No data available for this request.',
-                'returned' => $items
+                'returned' => $items,
+                'xml-response' => $response
             ];
         }
 
