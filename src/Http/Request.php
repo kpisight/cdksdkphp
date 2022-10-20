@@ -44,7 +44,7 @@ class Http {
         return [
             'request' => [
                 'headers' => $requestHeaders, 
-                'url' => $request
+                'url' => $requestUrl
             ], 
             'response' => $response
         ];
