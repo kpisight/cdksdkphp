@@ -82,7 +82,7 @@ class Core {
             }
         }
 
-        return ['response' => $response, 'json' => $extractData, 'xml' => $response['response']];
+        return $extractData;
     }
 
     private function parseResponse($data,$map,$number = 0){
