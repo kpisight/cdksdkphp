@@ -17,7 +17,7 @@ class Http {
 
         $additionalHeaders = '';
 
-        $requestUrl = $this->apiEndpoint . '/' . $endpoint . '?' . http_build_query($data);
+        $requestUrl = $this->apiEndpoint . $endpoint . '?' . http_build_query($data);
         $requestHeaders = ['Content-Type: ' . $this->setHeader, $additionalHeaders];
 
         $ch = curl_init($requestUrl);
@@ -25,7 +25,7 @@ class Http {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
         curl_setopt($ch, CURLOPT_POST, 1);
         //curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
