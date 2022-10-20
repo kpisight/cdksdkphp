@@ -42,13 +42,14 @@ class Core {
         if(isset($response['status'])){
             return [
                 'status' => 'error', 
-                'message' => $response['message']
+                'message' => $response['message'],
+                'raw-response' => $response
             ];
         }
 
         $items = json_decode(
             json_encode(
-                (array)simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA)
+                (array)simplexml_load_string($response['response'], 'SimpleXMLElement', LIBXML_NOCDATA)
         ), 
         true);
 
@@ -58,7 +59,8 @@ class Core {
                 'status' => 'error',
                 'message' => 'No data available for this request.',
                 'returned' => $items,
-                'xml-response' => $response
+                'xml-response' => $response['response'],
+                'raw-response' => $response
             ];
         }
 
@@ -80,7 +82,7 @@ class Core {
             }
         }
 
-        return ['json' => $extractData, 'xml' => $response];
+        return ['response' => $response, 'json' => $extractData, 'xml' => $response['response']];
     }
 
     private function parseResponse($data,$map,$number = 0){

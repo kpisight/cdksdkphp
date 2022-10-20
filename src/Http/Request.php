@@ -17,9 +17,12 @@ class Http {
 
         $additionalHeaders = '';
 
-        $ch = curl_init($this->apiEndpoint . '/' . $endpoint . '?' . http_build_query($data));
+        $requestUrl = $this->apiEndpoint . '/' . $endpoint . '?' . http_build_query($data);
+        $requestHeaders = ['Content-Type: ' . $this->setHeader, $additionalHeaders];
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $this->setHeader, $additionalHeaders]);
+        $ch = curl_init($requestUrl);
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
@@ -38,7 +41,13 @@ class Http {
 
         curl_close($ch);
 
-        return $response;
+        return [
+            'request' => [
+                'headers' => $requestHeaders, 
+                'url' => $request
+            ], 
+            'response' => $response
+        ];
 
     }
 
