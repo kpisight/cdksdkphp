@@ -18,17 +18,24 @@ class Http {
         $additionalHeaders = '';
 
         $requestUrl = $this->apiEndpoint . $endpoint . '?' . http_build_query($data);
-        $requestHeaders = ['Content-Type: ' . $this->setHeader, $additionalHeaders];
+
+        /**
+         *  @ Research why this is throwing errors in many containers.
+         */
+        //$requestHeaders = ['Content-Type: ' . $this->setHeader, $additionalHeaders];
+        $requestHeaders = [];
 
         $ch = curl_init($requestUrl);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERPWD, $this->username . ":" . $this->password);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
         curl_setopt($ch, CURLOPT_POST, 1);
-        //curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 600000);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
 
         $response = curl_exec($ch);
 
