@@ -23,7 +23,7 @@ class Core {
         $this->types = new Types();
     }
 
-    public function extract($data = [], $map = []){
+    public function extract($data = [], $map = ['master' => []]){
 
         if(!isset($data['request'])){
             return $this->response->errorResponse("Missing 'request' param in SDK object.", false);
@@ -47,6 +47,14 @@ class Core {
             ];
         }
 
+        /**
+         *  @ Setup Mappers ::
+        */
+        if(isset($map['fee'])){
+            $feeMap = $map['fee'];
+        }
+        $map = $map['master'];
+
         $items = json_decode(
             json_encode(
                 (array)simplexml_load_string($response['response'], 'SimpleXMLElement', LIBXML_NOCDATA)
@@ -64,6 +72,7 @@ class Core {
             ];
         }
 
+
         $extractData = [];
         foreach($items[$responseObj] as $item){
             
@@ -76,22 +85,36 @@ class Core {
                         $extractData[] = $this->parseResponse($item,$map,$i);
                     }
                 }
+                
+                if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
+                    $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
+                    for($i=0;$i<$lineCount;$i++){
+                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$this->serviceRo->feeOpCodeSkip());
+                    }
+                }
 
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
             }
         }
-
+        
         return $extractData;
     }
 
-    private function parseResponse($data,$map,$number = 0){
+    private function parseResponse($data,$map,$number = 0,$ignored = []){
 
         $response = [];
         $fields = array_values($map);
         $keys = array_keys($map);
         $count = count($fields);
+
         for($i=0;$i<$count;$i++){
+
+            if(in_array($data[$fields[$i]],$ignored)){
+                $response[$keys[$i]] = '';
+                continue;
+            }
+
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
                     if(isset($data[$fields[$i]]['V'][$number])){

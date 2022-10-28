@@ -333,6 +333,21 @@ class ServiceRo {
         return $newMap;
     }
 
+    public function feeOpCodeLabel(){
+        return [
+            $this->FEEOPCODE
+        ];
+    }
+
+    public function feeOpCodeSkip(){
+        return [
+            $this->MLSSALE,
+            $this->MLSCOST,
+            $this->HRSTECHNO,
+            $this->LBRSALE,
+            $this->LBRCOST
+        ];
+    }
 
     /**
      *   @ An Array Map of all fields :::
