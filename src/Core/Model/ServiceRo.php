@@ -346,8 +346,10 @@ class ServiceRo {
             $this->HRSTECHNO,
             $this->LBRSALE,
             $this->LBRCOST,
-            $this->TOTLABORCOST,
-            $this->TOTPARTSCOST
+            $this->TOTPARTSCOST,
+            $this->TOTPARTSSALE,
+            $this->PRTCOST,
+            $this->PRTSALE
         ];
     }
 
