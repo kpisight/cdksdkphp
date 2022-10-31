@@ -6,16 +6,18 @@ include_once __DIR__ . '/../Response/Response.php';
 include_once __DIR__ . '/Model/ServiceRo.php';
 include_once __DIR__ . '/Model/Employee.php';
 include_once __DIR__ . '/Model/Types.php';
+include_once __DIR__ . '/TestSuite/TestSuite.php';
 
-class Core {
+class Core extends TestSuite {
 
     public function __construct(
         public $authentication,
         public $environment,
-        public $lines = false
+        public $lines = false,
+        public $testSuiteConfig = []
     ){
         $this->setConfig();
-        $this->http = new Http($this->configData());
+        $this->http = new Http($this->config->global());
         $this->extract = new Extract();
         $this->response = new Response();
         $this->serviceRo = new ServiceRo();
@@ -66,6 +68,8 @@ class Core {
         ), 
         true);
 
+
+
         $responseObj = $this->types->renderTypeObj($data['type']);
         if(!isset($items[$responseObj])){
             return [
@@ -77,14 +81,21 @@ class Core {
             ];
         }
 
+        /**
+         *  Test Suite Functions ::
+         */
+        $this->runTestSuite($items[$responseObj]);
 
         $extractData = [];
         foreach($items[$responseObj] as $item){
 
             if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
             {
+                $RO = $item[$this->serviceRo->RONUMBER];
 
                 $extractParts = $this->parsePartsData($item,$prtsMap);
+
+                $this->runTestSuite2($extractParts,$RO);
 
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
@@ -99,6 +110,8 @@ class Core {
                         $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(), true);
                     }
                 }
+
+                //$this->runTestSuite2(end($extractData),$RO);
 
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
@@ -120,23 +133,37 @@ class Core {
 
         foreach($keys as $key){
             
-            if(isset($item[$key]['V']) && (!is_array($item[$key]['V']))){
+            if(!isset($item[$key]['V'])){
                 continue;
             }
 
             if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTEXTENDEDCOST)){
-                foreach($item[$key]['V'] as $value){
-                    $prtsExtendedCost[] = $value;
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $prtsExtendedCost[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $prtsExtendedCost[] = $this->cleanResponse($item[$key]['V']);
                 }
             }
+
             if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTEXTENDEDSALE)){
-                foreach($item[$key]['V'] as $value){
-                    $prtsExtendedSale[] = $value;
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $prtsExtendedSale[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $prtsExtendedSale[] = $this->cleanResponse($item[$key]['V']);
                 }
             }
+
             if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLINECODE)){
-                foreach($item[$key]['V'] as $value){
-                    $prtsLineCode[] = $value;
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $prtsLineCode[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $prtsLineCode[] = $this->cleanResponse($item[$key]['V']);
                 }
             }
         }
@@ -150,15 +177,15 @@ class Core {
         $prtsSaleSplit = [];
         $l = 0;
         foreach($partsLineCodeList as $lineItem){
-            $prtsCostSplit[$lineItem][] = $prtsExtendedCost[$l];
-            $prtsSaleSplit[$lineItem][] = $prtsExtendedSale[$l];
+            $prtsCostSplit[$lineItem][] = $this->cleanResponse($prtsExtendedCost[$l]);
+            $prtsSaleSplit[$lineItem][] = $this->cleanResponse($prtsExtendedSale[$l]);
             $l++;
         }
 
         $partsCostKeys = array_keys($prtsCostSplit);
         foreach($partsCostKeys as $p){
-            $prtsCostSplit[$p] = number_format((float)array_sum($prtsCostSplit[$p]), 2, '.', '');
-            $prtsSaleSplit[$p] = number_format((float)array_sum($prtsSaleSplit[$p]), 2, '.', '');
+            $prtsCostSplit[$p] = number_format(array_sum($prtsCostSplit[$p]), 2, '.', '');
+            $prtsSaleSplit[$p] = number_format(array_sum($prtsSaleSplit[$p]), 2, '.', '');
         }
 
         $prtsExtendedCostKey = $this->serviceRo->PRTEXTENDEDCOST;
@@ -179,7 +206,7 @@ class Core {
 
     }
 
-    private function parseResponse($data,$map,$number = 0,$extractParts = [], $ignored = [],$isFeeLine = false){
+    private function parseResponse($data,$map,$number = 0,$extractParts = [], $ignored = [], $isFeeLine = false){
 
         $response = [];
         $fields = array_values($map);
@@ -188,7 +215,7 @@ class Core {
 
         for($i=0;$i<$count;$i++){
 
-            if(in_array($keys[$i],$ignored)){
+            if(in_array($fields[$i],$ignored)){
                 $response[$fields[$i]] = '';
                 continue;
             }
@@ -202,7 +229,7 @@ class Core {
                     && (!$isFeeLine)
                 )
                 {
-                    $response[$keys[$i]] = $extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]];
+                    $response[$keys[$i]] = $this->cleanResponse($extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]]);
                 }
                 else {
                     $response[$keys[$i]] = 0;
@@ -214,13 +241,15 @@ class Core {
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
                     if(isset($data[$fields[$i]]['V'][$number])){
-                        $response[$keys[$i]] = $data[$fields[$i]]['V'][$number];
+                        $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
                     }
                 }else {
-                    $response[$keys[$i]] = $data[$fields[$i]]['V'];
+                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V']);
                 }
             }else {
-                $response[$keys[$i]] = $this->convertBlankArrayData($data[$fields[$i]]);
+                $response[$keys[$i]] = $this->cleanResponse(
+                    $this->convertBlankArrayData($data[$fields[$i]])
+                );
             }
         }
 
@@ -234,7 +263,7 @@ class Core {
         $keys = array_keys($map);
         $count = count($fields);
         for($i=0;$i<$count;$i++){
-            $response[$keys[$i]] = $data[$fields[$i]];
+            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]);
         }
         return $response;
     }
@@ -251,7 +280,15 @@ class Core {
         return $data;
     }
 
-
+    private function cleanResponse($value){
+        if(is_numeric($value)){
+            if($value<0){
+                return (string)$value;
+            }
+            return (int)$value;
+        }
+        return $value;
+    }   
 
 
 }

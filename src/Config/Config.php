@@ -9,7 +9,8 @@ class CdkConfig {
 
     public function __construct(
         public $auth,
-        public $environment
+        public $environment,
+        public $testSuite = []
     ){
         $this->Response = new Response;
     }
@@ -43,6 +44,22 @@ class CdkConfig {
 
     public function liveLabel(){
         return $this->live;
+    }
+
+    public function testSuite(){
+        return $this->testSuite;
+    }
+
+    public function global(){
+        return [
+            'username' => $this->username(),
+            'password' => $this->password(),
+            'environment' => $this->env(),
+            'labels' => [
+                'dev' => $this->sandboxLabel(),
+                'live' => $this->liveLabel()
+            ]
+        ];
     }
 
     private function verify($type){
