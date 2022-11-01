@@ -10,7 +10,9 @@ class CdkConfig {
     public function __construct(
         public $auth,
         public $environment,
-        public $testSuite = []
+        public $testSuite = [],
+        public $cache = false,
+        public $cacheDir = ''
     ){
         $this->Response = new Response;
     }
@@ -46,6 +48,14 @@ class CdkConfig {
         return $this->live;
     }
 
+    public function cache(){
+        return $this->cache;
+    }
+
+    public function cacheDir(){
+        return $this->cacheDir;
+    }
+
     public function testSuite(){
         return $this->testSuite;
     }
@@ -58,7 +68,8 @@ class CdkConfig {
             'labels' => [
                 'dev' => $this->sandboxLabel(),
                 'live' => $this->liveLabel()
-            ]
+            ],
+            'cache' => $this->cache(),
         ];
     }
 
