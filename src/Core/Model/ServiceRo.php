@@ -349,7 +349,9 @@ class ServiceRo {
             $this->TOTPARTSCOST,
             $this->TOTPARTSSALE,
             $this->PRTCOST,
-            $this->PRTSALE
+            $this->PRTSALE,
+            $this->LBRSOLDHOURS,
+            $this->LBRACTUALHOURS
         ];
     }
 
