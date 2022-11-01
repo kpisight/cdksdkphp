@@ -112,20 +112,21 @@ class Core extends TestSuite {
 
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
+                    $usedKeys = [];
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$map,$i,$extractParts);
-                        $this->runTestSuite2($extractData,$RO);
+                        $extractData[] = $this->parseResponse($item,$map,$i,$extractParts,[],false,$usedKeys);
+                        $usedKeys[] = $item[$this->serviceRo->LBRLINECODE]['V'][$i];
                     }
                 }
                 
                 if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
+                    $usedKeys = [];
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(), true);
+                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(), true, $usedKeys);
+                        $usedKeys[] = $item[$this->serviceRo->LBRLINECODE]['V'][$i];
                     }
                 }
-
-                
 
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
@@ -144,8 +145,8 @@ class Core extends TestSuite {
         $prtsLineCode = [];
 
         $prtsCost = [];
-        $prtsSale = []; 
-
+        $prtsSale = [];
+        
         foreach($keys as $key){
             
             if(!isset($item[$key]['V'])){
@@ -221,12 +222,13 @@ class Core extends TestSuite {
 
     }
 
-    private function parseResponse($data,$map,$number = 0,$extractParts = [], $ignored = [], $isFeeLine = false){
+    private function parseResponse($data,$map,$number = 0,$extractParts = [], $ignored = [], $isFeeLine = false, $usedKeys = []){
 
         $response = [];
         $fields = array_values($map);
         $keys = array_keys($map);
         $count = count($fields);
+        
 
         for($i=0;$i<$count;$i++){
 
@@ -236,12 +238,14 @@ class Core extends TestSuite {
             }
 
             if(in_array($keys[$i], array_keys($extractParts))){
+
                 if(
                     in_array(
                         $data[$this->serviceRo->LBRLINECODE]['V'][$number],
                         array_keys($extractParts[$keys[$i]])
                     )
                     && (!$isFeeLine)
+                    && (!in_array($data[$this->serviceRo->LBRLINECODE]['V'][$number], $usedKeys))
                 )
                 {
                     $response[$keys[$i]] = $this->cleanResponse($extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]], true);
@@ -256,7 +260,16 @@ class Core extends TestSuite {
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
                     if(isset($data[$fields[$i]]['V'][$number])){
-                        $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
+
+                        if(in_array($fields[$i],$this->serviceRo->asNumber()))
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],true);
+                        }
+                        else 
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
+                        }
+
                     }
                 }else {
                     $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V']);
