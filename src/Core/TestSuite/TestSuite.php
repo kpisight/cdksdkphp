@@ -30,6 +30,8 @@ class TestSuite {
             if(in_array($ro, $this->investigate)){
                 echo json_encode($item, JSON_PRETTY_PRINT);
                 echo "\n\n";
+            }else {
+                return '';
             }
         }
     }

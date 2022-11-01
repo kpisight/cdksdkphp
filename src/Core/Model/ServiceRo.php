@@ -355,6 +355,14 @@ class ServiceRo {
         ];
     }
 
+    public function asNumber(){
+        return [
+            $this->MLSCOST,
+            $this->MLSSALE,
+            $this->LBRSALE,
+            $this->LBRCOST
+        ];
+    }
     /**
      *   @ An Array Map of all fields :::
      */
