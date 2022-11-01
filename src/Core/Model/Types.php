@@ -64,6 +64,17 @@ class Types {
             $this->SERVICE_RO_CLOSED
         ];
     }
+
+    public function installTypes(){
+        return [
+            $this->SERVICE_RO_HISTORY
+        ];
+    }
+    public function pullTypes(){
+        return [
+            $this->SERVICE_RO_CLOSED
+        ];
+    }
     public function renderTypeObj($type){
         switch($type){
             case $this->SERVICE_RO_HISTORY : return $this->SERVICE_RO_HISTORY_OBJ; break;

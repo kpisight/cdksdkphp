@@ -1,6 +1,7 @@
 <?php 
 
 include_once __DIR__ . '/../Http/Request.php';
+include_once __DIR__ . '/../Http/Cache.php';
 include_once __DIR__ . '/Extract/Extract.php';
 include_once __DIR__ . '/../Response/Response.php';
 include_once __DIR__ . '/Model/ServiceRo.php';
@@ -14,10 +15,13 @@ class Core extends TestSuite {
         public $authentication,
         public $environment,
         public $lines = false,
-        public $testSuiteConfig = []
+        public $testSuiteConfig = [],
+        public $cache = false,
+        public $cacheDir = ''
     ){
         $this->setConfig();
         $this->http = new Http($this->config->global());
+        $this->httpCache = new HttpCache($this->cacheDir);
         $this->extract = new Extract();
         $this->response = new Response();
         $this->serviceRo = new ServiceRo();
@@ -40,7 +44,18 @@ class Core extends TestSuite {
             $cleanParams = $this->extract->queryBuilder($cleanParams, [$key => $value]);
         }
 
-        $response = $this->http->post($data['type'],$cleanParams);
+        $response = false;
+        if($this->cache){
+            $response = $this->httpCache->get($data['type'],$cleanParams);
+        }
+        if(!$response){
+            $response = $this->http->post($data['type'],$cleanParams);
+        }
+
+        if($this->cache && $response){
+            $cache = $this->httpCache->save($data['type'],$cleanParams,$response);
+        }
+
         if(isset($response['status'])){
             return [
                 'status' => 'error', 
@@ -67,8 +82,6 @@ class Core extends TestSuite {
                 (array)simplexml_load_string($response['response'], 'SimpleXMLElement', LIBXML_NOCDATA)
         ), 
         true);
-
-
 
         $responseObj = $this->types->renderTypeObj($data['type']);
         if(!isset($items[$responseObj])){
@@ -101,6 +114,7 @@ class Core extends TestSuite {
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
                     for($i=0;$i<$lineCount;$i++){
                         $extractData[] = $this->parseResponse($item,$map,$i,$extractParts);
+                        $this->runTestSuite2($extractData,$RO);
                     }
                 }
                 
@@ -111,12 +125,13 @@ class Core extends TestSuite {
                     }
                 }
 
-                //$this->runTestSuite2(end($extractData),$RO);
+                
 
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
             }
         }
+
         return $extractData;
     }
 
@@ -140,20 +155,20 @@ class Core extends TestSuite {
             if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTEXTENDEDCOST)){
                 if(is_array($item[$key]['V'])){
                     foreach($item[$key]['V'] as $value){
-                        $prtsExtendedCost[] = $this->cleanResponse($value);
+                        $prtsExtendedCost[] = $this->cleanResponse($value, true);
                     }
                 }else {
-                    $prtsExtendedCost[] = $this->cleanResponse($item[$key]['V']);
+                    $prtsExtendedCost[] = $this->cleanResponse($item[$key]['V'], true);
                 }
             }
 
             if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTEXTENDEDSALE)){
                 if(is_array($item[$key]['V'])){
                     foreach($item[$key]['V'] as $value){
-                        $prtsExtendedSale[] = $this->cleanResponse($value);
+                        $prtsExtendedSale[] = $this->cleanResponse($value, true);
                     }
                 }else {
-                    $prtsExtendedSale[] = $this->cleanResponse($item[$key]['V']);
+                    $prtsExtendedSale[] = $this->cleanResponse($item[$key]['V'], true);
                 }
             }
 
@@ -177,8 +192,8 @@ class Core extends TestSuite {
         $prtsSaleSplit = [];
         $l = 0;
         foreach($partsLineCodeList as $lineItem){
-            $prtsCostSplit[$lineItem][] = $this->cleanResponse($prtsExtendedCost[$l]);
-            $prtsSaleSplit[$lineItem][] = $this->cleanResponse($prtsExtendedSale[$l]);
+            $prtsCostSplit[$lineItem][] = $this->cleanResponse($prtsExtendedCost[$l], true);
+            $prtsSaleSplit[$lineItem][] = $this->cleanResponse($prtsExtendedSale[$l], true);
             $l++;
         }
 
@@ -229,7 +244,7 @@ class Core extends TestSuite {
                     && (!$isFeeLine)
                 )
                 {
-                    $response[$keys[$i]] = $this->cleanResponse($extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]]);
+                    $response[$keys[$i]] = $this->cleanResponse($extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]], true);
                 }
                 else {
                     $response[$keys[$i]] = 0;
@@ -280,10 +295,13 @@ class Core extends TestSuite {
         return $data;
     }
 
-    private function cleanResponse($value){
+    private function cleanResponse($value,$numeric_money = false){
         if(is_numeric($value)){
-            if($value<0){
-                return (string)$value;
+            if($numeric_money){
+                if($value<0){
+                    return (string)number_format((float)$value, 2, '.', '');
+                }
+                return number_format((float)$value, 2, '.', '');
             }
             return (int)$value;
         }
