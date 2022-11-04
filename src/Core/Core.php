@@ -94,11 +94,6 @@ class Core extends TestSuite {
             ];
         }
 
-        /**
-         *  Test Suite Functions ::
-         */
-        $this->runTestSuite($items[$responseObj]);
-
         $extractData = [];
         foreach($items[$responseObj] as $item){
 
@@ -107,26 +102,46 @@ class Core extends TestSuite {
                 $RO = $item[$this->serviceRo->RONUMBER];
 
                 $extractParts = $this->parsePartsData($item,$prtsMap);
+                $extractPartsPercent = $this->parsePartsDataPercent($item);
 
                 $this->runTestSuite2($extractParts,$RO);
 
+                $extractParts = [
+                    'parts' => $extractParts,
+                    'percent' => $extractPartsPercent
+                ];
+
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
+
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
-                    $usedKeys = [];
+                    $keyNumbers = [];
+
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$map,$i,$extractParts,[],false,$usedKeys);
-                        $usedKeys[] = $item[$this->serviceRo->LBRLINECODE]['V'][$i];
+
+                        if(
+                            isset($keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]])
+                        ){
+                            $keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]] = ($keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]]+1);
+                        }
+                        else 
+                        {
+                            $keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]] = 0;
+                        }
+
+                        $extractData[] = $this->parseResponse($item,$map,$i,$extractParts,[],false, $keyNumbers);
+
+                        $this->runTestSuite2(end($extractData),$RO);
+
                     }
                 }
                 
                 if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
-                    $usedKeys = [];
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(), true, $usedKeys);
-                        $usedKeys[] = $item[$this->serviceRo->LBRLINECODE]['V'][$i];
+                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(),true);
                     }
                 }
+
 
             }else {
                 $extractData[] = $this->parseResponseRaw($item,$map);
@@ -222,14 +237,114 @@ class Core extends TestSuite {
 
     }
 
-    private function parseResponse($data,$map,$number = 0,$extractParts = [], $ignored = [], $isFeeLine = false, $usedKeys = []){
+
+
+    private function parsePartsDataPercent($item){
+
+        $keys = array_keys($item);
+        $prtPercentage = [];
+        $lbrLines = [];
+        foreach($keys as $key){
+            if($key === $this->serviceRo->PRTLINECODE){
+                if(isset($item[$key]['V'])){
+                    if(is_array($item[$key]['V'])){
+                        $count = count($item[$key]['V']);
+                        for($i=0;$i<$count;$i++){
+                            $prtPercentage[$i] = [ 
+                                $item[$this->serviceRo->PRTLINECODE]['V'][$i] => $item[$this->serviceRo->PRTMCDPERCENTAGE]['V'][$i]
+                            ];
+                            if(isset($prtPercentage[$i-1][$item[$this->serviceRo->PRTLINECODE]['V'][$i]])){
+                                if(
+                                    $prtPercentage[$i-1][$item[$this->serviceRo->PRTLINECODE]['V'][$i]] === $item[$this->serviceRo->PRTMCDPERCENTAGE]['V'][$i]
+                                ){
+                                    unset($prtPercentage[$i-1]);
+                                }
+                            }
+                        }
+                    }else {
+                        $prtPercentage[0] = [ 
+                            $item[$this->serviceRo->PRTLINECODE]['V'][0] => $item[$this->serviceRo->PRTMCDPERCENTAGE]['V']
+                        ];
+                    }
+                }
+            }
+
+            if($key === $this->serviceRo->LBRLINECODE){
+                $lbrLines[] = $item[$this->serviceRo->LBRLINECODE]['V'];
+            }
+        }
+
+        $lbrLines = $lbrLines[0];
+        $partPercentages = [];
+        foreach($prtPercentage as $part){
+            $partPercentages[] = $part; 
+        }
+
+        
+        $count = is_array($lbrLines) ? count($lbrLines) : 1;
+        $pCount = count($partPercentages);
+
+        $percentageIndexes = [];
+        foreach($partPercentages as $index => $percent){
+            if(is_array($percent)){
+                $key = array_keys($percent);
+                if(isset($percentageIndexes[$key[0]])){
+                    $countIndex = count($percentageIndexes[$key[0]]);
+                    $percentageIndexes[$key[0]][$countIndex] = $percent[$key[0]];
+                }else {
+                    $percentageIndexes[$key[0]][0] = $percent[$key[0]];
+                }
+            }
+        }
+
+        $newPartPercentages = [];
+        $lineCounters = [];
+        if(is_array($lbrLines)){
+            foreach($lbrLines as $line){
+                if(isset($lineCounters[$line])){
+                    $lineCounters[$line] = $lineCounters[$line]+1;
+                }else {
+                    $lineCounters[$line] = 1;
+                }
+            }
+            $indexKeys = array_keys($percentageIndexes);
+            foreach($lbrLines as $i => $line){
+                if(!in_array($line,$indexKeys)){
+                    $newPartPercentages[$line] = [0];
+                }else {
+                    $counter = $lineCounters[$line];
+                    for($c=0;$c<$counter;$c++){
+                        $newPartPercentages[$line][$c] = $percentageIndexes[$line][$c] ?? $percentageIndexes[$line];
+                    }
+                }
+            }
+        }else {
+            $lineCounters[$lbrLines] = 1;
+            $indexKeys = array_keys($percentageIndexes);
+            if(!in_array($lbrLines,$indexKeys)){
+                $newPartPercentages[$line] = [0];
+            }else {
+                $counter = $lineCounters[$lbrLines];
+                for($c=0;$c<$counter;$c++){
+                    $newPartPercentages[$lbrLines][$c] = $percentageIndexes[$lbrLines][$c];
+                }
+            }
+        }
+
+        return $newPartPercentages;
+
+    }
+
+
+    private function parseResponse($data,$map,$number = 0, $extractParts = [], $ignored = [], $isFeeLine = false, $keyNumbers = []){
 
         $response = [];
         $fields = array_values($map);
         $keys = array_keys($map);
         $count = count($fields);
+        $partsExtract = $extractParts['parts'];
+        $percentExtract = $extractParts['percent'];
         
-
         for($i=0;$i<$count;$i++){
 
             if(in_array($fields[$i],$ignored)){
@@ -237,25 +352,37 @@ class Core extends TestSuite {
                 continue;
             }
 
-            if(in_array($keys[$i], array_keys($extractParts))){
 
+            if(
+                ($fields[$i] === $this->serviceRo->PRTEXTENDEDCOST) ||
+                ($fields[$i] === $this->serviceRo->PRTEXTENDEDSALE)
+            ){
+                $partsKeys = array_keys($partsExtract[$keys[$i]]);
                 if(
-                    in_array(
-                        $data[$this->serviceRo->LBRLINECODE]['V'][$number],
-                        array_keys($extractParts[$keys[$i]])
-                    )
-                    && (!$isFeeLine)
-                    && (!in_array($data[$this->serviceRo->LBRLINECODE]['V'][$number], $usedKeys))
-                )
-                {
-                    $response[$keys[$i]] = $this->cleanResponse($extractParts[$keys[$i]][$data[$this->serviceRo->LBRLINECODE]['V'][$number]], true);
-                }
-                else {
+                    in_array($data[$this->serviceRo->LBRLINECODE]['V'][$number], $partsKeys)
+                ){
+
+                    if($isFeeLine){
+                        $response[$keys[$i]] = 0;
+                    }else {
+                        $index = $data[$this->serviceRo->LBRLINECODE]['V'][$number];
+                        if(isset($keyNumbers[$data[$this->serviceRo->LBRLINECODE]['V'][$number]])){
+                            $percent = $percentExtract[$index][$keyNumbers[$data[$this->serviceRo->LBRLINECODE]['V'][$number]]];
+                            if(is_array($percent)){
+                                $percent = $percent[0];
+                            }
+                            $response[$keys[$i]] = $percent != 0 ? (($partsExtract[$keys[$i]][$index]/$percent)*100) : 0; 
+                        }else {
+                            $response[$keys[$i]] = 0;
+                        }
+                    }
+                }else {
                     $response[$keys[$i]] = 0;
                 }
                 continue;
-
             }
+            
+            
 
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
@@ -279,6 +406,7 @@ class Core extends TestSuite {
                     $this->convertBlankArrayData($data[$fields[$i]])
                 );
             }
+
         }
 
         return $response;
