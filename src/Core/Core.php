@@ -371,7 +371,7 @@ class Core extends TestSuite {
                             if(is_array($percent)){
                                 $percent = $percent[0];
                             }
-                            $response[$keys[$i]] = $percent != 0 ? (($partsExtract[$keys[$i]][$index]/$percent)*100) : 0; 
+                            $response[$keys[$i]] = $percent != 0 ? ($partsExtract[$keys[$i]][$index]*($percent/100)) : 0; 
                         }else {
                             $response[$keys[$i]] = 0;
                         }
