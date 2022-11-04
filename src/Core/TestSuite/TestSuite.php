@@ -16,7 +16,7 @@ class TestSuite {
         if($this->verbose){
             if(isset($items)){
                 $count = count($items);
-                $randNums = $this->setRandNums(4,$count);
+                $randNums = $this->setRandNums(1,$count);
                 for($i=0;$i<$count;$i++){
                     $this->outputRoTest($items[$i]);
                     $this->saveRandomOutputTest($items[$i],$i,$randNums);
@@ -27,6 +27,7 @@ class TestSuite {
 
     public function runTestSuite2($item,$ro){
         if($this->verbose){
+            
             if(in_array($ro, $this->investigate)){
                 echo json_encode($item, JSON_PRETTY_PRINT);
                 echo "\n\n";
@@ -39,16 +40,30 @@ class TestSuite {
 
     public function setRandNums($count,$total){
         $nums = [];
+        $taken = [];
         for($i=0;$i<$count;$i++){
+            if(in_array($i,$nums)){
+                $count = $count++;
+                continue;
+            }
             $nums[$i] = rand(0,$total);
         }
         return $nums;
+    }
+
+    public function assoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
     }
 
     /**
      *  @ Tests ::
      */
     private function outputRoTest($item){
+
+
+        echo $item['RONumber'] . ' --- ' . json_encode($this->investigate) . "\n\n";
         if(in_array($item['RONumber'], $this->investigate)){
     
             if($this->storeLog){
