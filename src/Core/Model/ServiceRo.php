@@ -348,10 +348,12 @@ class ServiceRo {
             $this->LBRCOST,
             $this->TOTPARTSCOST,
             $this->TOTPARTSSALE,
+            $this->LBRSOLDHOURS,
+            $this->LBRACTUALHOURS,
             $this->PRTCOST,
             $this->PRTSALE,
-            $this->LBRSOLDHOURS,
-            $this->LBRACTUALHOURS
+            $this->PRTEXTENDEDCOST,
+            $this->PRTEXTENDEDSALE
         ];
     }
 
@@ -360,7 +362,11 @@ class ServiceRo {
             $this->MLSCOST,
             $this->MLSSALE,
             $this->LBRSALE,
-            $this->LBRCOST
+            $this->LBRCOST,
+            $this->PRTCOST,
+            $this->PRTSALE,
+            $this->PRTEXTENDEDCOST,
+            $this->PRTEXTENDEDSALE
         ];
     }
     /**
