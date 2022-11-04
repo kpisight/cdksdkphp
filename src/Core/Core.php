@@ -104,7 +104,7 @@ class Core extends TestSuite {
                 $extractParts = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
 
-                $this->runTestSuite2($extractParts,$RO);
+                //$this->runTestSuite2($extractParts,$RO);
 
                 $extractParts = [
                     'parts' => $extractParts,
@@ -130,7 +130,7 @@ class Core extends TestSuite {
 
                         $extractData[] = $this->parseResponse($item,$map,$i,$extractParts,[],false, $keyNumbers);
 
-                        $this->runTestSuite2(end($extractData),$RO);
+                        //$this->runTestSuite2(end($extractData),$RO);
 
                     }
                 }
