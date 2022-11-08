@@ -94,6 +94,8 @@ class Core extends TestSuite {
             ];
         }
 
+        $this->runTestSuite($items[$responseObj]);
+
         $extractData = [];
         foreach($items[$responseObj] as $item){
 
@@ -101,10 +103,13 @@ class Core extends TestSuite {
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
 
+                $this->runTestSuite2($item,$RO);
+
                 $extractParts = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
 
-                //$this->runTestSuite2($extractParts,$RO);
+                $this->runTestSuite2($extractParts,$RO);
+                $this->runTestSuite2($extractPartsPercent,$RO);
 
                 $extractParts = [
                     'parts' => $extractParts,
@@ -371,7 +376,7 @@ class Core extends TestSuite {
                             if(is_array($percent)){
                                 $percent = $percent[0];
                             }
-                            $response[$keys[$i]] = $percent != 0 ? ($partsExtract[$keys[$i]][$index]*($percent/100)) : 0; 
+                            $response[$keys[$i]] = $this->cleanResponse($percent != 0 ? ($partsExtract[$keys[$i]][$index]*($percent/100)) : 0, true); 
                         }else {
                             $response[$keys[$i]] = 0;
                         }
@@ -442,7 +447,7 @@ class Core extends TestSuite {
                 if($value<0){
                     return (string)number_format((float)$value, 2, '.', '');
                 }
-                return number_format((float)$value, 2, '.', '');
+                return (string)number_format((float)$value, 2, '.', '');
             }
             return (int)$value;
         }
