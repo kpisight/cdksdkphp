@@ -16,7 +16,7 @@ class TestSuite {
         if($this->verbose){
             if(isset($items)){
                 $count = count($items);
-                $randNums = $this->setRandNums(1,$count);
+                $randNums = $this->setRandNums(0,$count);
                 for($i=0;$i<$count;$i++){
                     $this->outputRoTest($items[$i]);
                     $this->saveRandomOutputTest($items[$i],$i,$randNums);
