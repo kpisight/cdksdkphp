@@ -366,7 +366,9 @@ class ServiceRo {
             $this->PRTCOST,
             $this->PRTSALE,
             $this->PRTEXTENDEDCOST,
-            $this->PRTEXTENDEDSALE
+            $this->PRTEXTENDEDSALE,
+            $this->FEESALE,
+            $this->FEECOST
         ];
     }
     /**

@@ -103,25 +103,47 @@ class Core extends TestSuite {
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
 
-                $extractPartsCost = $this->parsePartsData($item,$prtsMap);
-                $partsCostMap = $this->mapToPartsCost($item,$extractPartsCost);
+                $this->runTestSuite2($item,$RO);
 
-                $this->runTestSuite2($extractPartsCost,$RO);
-                $this->runTestSuite2($partsCostMap, $RO);
+                $extractParts = $this->parsePartsData($item,$prtsMap);
+                $extractPartsPercent = $this->parsePartsDataPercent($item);
+
+                $this->runTestSuite2($extractParts,$RO);
+                $this->runTestSuite2($extractPartsPercent,$RO);
+
+                $extractParts = [
+                    'parts' => $extractParts,
+                    'percent' => $extractPartsPercent
+                ];
 
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
+
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
+                    $keyNumbers = [];
+
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$map,$i,$partsCostMap);
+
+                        if(
+                            isset($keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]])
+                        ){
+                            $keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]] = ($keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]]+1);
+                        }
+                        else 
+                        {
+                            $keyNumbers[$item[$this->serviceRo->LBRLINECODE]['V'][$i]] = 0;
+                        }
+
+                        $extractData[] = $this->parseResponse($item,$map,$i,$extractParts,[],false, $keyNumbers);
+
+                        //$this->runTestSuite2(end($extractData),$RO);
+
                     }
                 }
-
-                //$this->runTestSuite2(end($extractData),$RO);
                 
                 if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$partsCostMap,$this->serviceRo->feeOpCodeSkip(),true);
+                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$extractParts,$this->serviceRo->feeOpCodeSkip(),true);
                     }
                 }
 
@@ -133,164 +155,6 @@ class Core extends TestSuite {
 
         return $extractData;
     }
-
-
-    private function mapToPartsCost($item,$prtsCosts = []){
-
-        $lineCodes = [];
-        $lineCodeMap = [];
-        $sequenceNoMap = [];
-        $sequences = [];
-
-        if(!isset($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
-            return [];
-        }
-
-        if(is_array($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
-            foreach($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'] as $key => $sequenceNo){
-                $sequenceNoMap[$sequenceNo] = $item[$this->serviceRo->PRTLINECODE]['V'][$key];
-                $sequences[] = $sequenceNo;
-            }
-        }else {
-            $sequenceNoMap[0] = $item[$this->serviceRo->PRTLINECODE]['V'];
-        }
-
-        if(is_array($item[$this->serviceRo->LBRLINECODE]['V'])){
-            foreach($item[$this->serviceRo->LBRLINECODE]['V'] as $lineCode){
-                $lineCodes[] = $lineCode;
-            }
-        }else {
-            $lineCodes[0] = $item[$this->serviceRo->LBRLINECODE]['V'];
-        }
-
-        $key = 0;
-        foreach($lineCodes as $value){
-
-            // -- Debug Only ::
-            /*$lineCodeMap[] = [
-                'line' => $value,
-                'key' => $key,
-                'opcode' => $item[$this->serviceRo->LBROPCODE]['V'][$key] ?? '',
-                'labourSequenceNo' => $sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]] ?? false,
-                'parts' => [
-                    'PARTS_COST' => $prtsCosts['PARTS_COST'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0,
-                    'PARTS_SALE' => $prtsCosts['PARTS_SALE'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0
-                ]
-            ];*/
-
-            if(!isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])){
-                
-                $partsCostMap[] = [
-                    'PARTS_COST' => 0,
-                    'PARTS_SALE' => 0
-                ];
-
-            }else {
-
-                $partsCostMap[] = [
-                    'PARTS_COST' => $prtsCosts['PARTS_COST'][
-                        $sequenceNoMap[
-                            $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
-                        ]
-                    ] ?? 0,
-                    'PARTS_SALE' => $prtsCosts['PARTS_SALE'][
-                        $sequenceNoMap[
-                            $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
-                        ]
-                    ] ?? 0
-                ];
-
-            }
-            $key++;
-        }
-
-        return $partsCostMap;
-
-    }
-
-
-    private function parseResponse($data,$map,$number = 0, $partsCostMap = [], $ignored = [], $isFeeLine = false, $keyNumbers = []){
-
-        $response = [];
-        $fields = array_values($map);
-        $keys = array_keys($map);
-        $count = count($fields);
-        
-        for($i=0;$i<$count;$i++){
-
-            if(in_array($fields[$i],$ignored)){
-                $response[$fields[$i]] = '';
-                continue;
-            }
-
-
-            if(
-                ($fields[$i] === $this->serviceRo->PRTEXTENDEDCOST) ||
-                ($fields[$i] === $this->serviceRo->PRTEXTENDEDSALE)
-            ){
-
-                if($isFeeLine){
-                    $response[$keys[$i]] = 0;
-                }else {
-                    if(!isset( $partsCostMap[$number][$keys[$i]])){
-                        $response[$keys[$i]] = 0;
-                    }else {
-                        $response[$keys[$i]] = $partsCostMap[$number][$keys[$i]];
-                    }   
-                }
-                continue;
-            }
-            
-            
-            if(isset($data[$fields[$i]]['V'])){
-                if(is_array($data[$fields[$i]]['V'])){
-                    if(isset($data[$fields[$i]]['V'][$number])){
-
-                        if(in_array($fields[$i],$this->serviceRo->asNumber()))
-                        {
-                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],true);
-                        }
-                        else 
-                        {
-                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
-                        }
-
-                    }
-                }else {
-                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V']);
-                }
-            }else {
-                $response[$keys[$i]] = $this->cleanResponse(
-                    $this->convertBlankArrayData($data[$fields[$i]])
-                );
-            }
-
-        }
-
-        return $response;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /****
-     * 
-     *  LEGACY
-     * 
-     * 
-     */
-
-
-
 
     private function parsePartsData($item,$prtsMap){
         
@@ -477,7 +341,81 @@ class Core extends TestSuite {
     }
 
 
-    
+    private function parseResponse($data,$map,$number = 0, $extractParts = [], $ignored = [], $isFeeLine = false, $keyNumbers = []){
+
+        $response = [];
+        $fields = array_values($map);
+        $keys = array_keys($map);
+        $count = count($fields);
+        $partsExtract = $extractParts['parts'];
+        $percentExtract = $extractParts['percent'];
+        
+        for($i=0;$i<$count;$i++){
+
+            if(in_array($fields[$i],$ignored)){
+                $response[$fields[$i]] = '';
+                continue;
+            }
+
+
+            if(
+                ($fields[$i] === $this->serviceRo->PRTEXTENDEDCOST) ||
+                ($fields[$i] === $this->serviceRo->PRTEXTENDEDSALE)
+            ){
+                $partsKeys = array_keys($partsExtract[$keys[$i]]);
+                if(
+                    in_array($data[$this->serviceRo->LBRLINECODE]['V'][$number], $partsKeys)
+                ){
+
+                    if($isFeeLine){
+                        $response[$keys[$i]] = 0;
+                    }else {
+                        $index = $data[$this->serviceRo->LBRLINECODE]['V'][$number];
+                        if(isset($keyNumbers[$data[$this->serviceRo->LBRLINECODE]['V'][$number]])){
+                            $percent = $percentExtract[$index][$keyNumbers[$data[$this->serviceRo->LBRLINECODE]['V'][$number]]];
+                            if(is_array($percent)){
+                                $percent = $percent[0];
+                            }
+                            $response[$keys[$i]] = $this->cleanResponse($percent != 0 ? ($partsExtract[$keys[$i]][$index]*($percent/100)) : 0, true); 
+                        }else {
+                            $response[$keys[$i]] = 0;
+                        }
+                    }
+                }else {
+                    $response[$keys[$i]] = 0;
+                }
+                continue;
+            }
+            
+            
+
+            if(isset($data[$fields[$i]]['V'])){
+                if(is_array($data[$fields[$i]]['V'])){
+                    if(isset($data[$fields[$i]]['V'][$number])){
+
+                        if(in_array($fields[$i],$this->serviceRo->asNumber()))
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],true);
+                        }
+                        else 
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
+                        }
+
+                    }
+                }else {
+                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V']);
+                }
+            }else {
+                $response[$keys[$i]] = $this->cleanResponse(
+                    $this->convertBlankArrayData($data[$fields[$i]])
+                );
+            }
+
+        }
+
+        return $response;
+    }
 
 
     private function parseResponseRaw($data,$map){
