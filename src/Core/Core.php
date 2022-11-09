@@ -103,16 +103,17 @@ class Core extends TestSuite {
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
                 
-                //$this->runTestSuite2($item,$RO);
+                $this->runTestSuite2($item,$RO);
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
                 $partsCostMap = $this->mapToPartsCost($item,$extractPartsCost,$extractPartsPercent);
 
-                $this->runTestSuite2($partsCostMap,$RO);
+                $this->runTestSuite2($extractPartsPercent,$RO);
 
+                //$this->runTestSuite2($extractPartsPercent,$RO);
                 //$this->runTestSuite2($extractPartsCost,$RO);
-                //$this->runTestSuite2($partsCostMap, $RO);
+                $this->runTestSuite2($partsCostMap, $RO);
 
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
@@ -140,7 +141,7 @@ class Core extends TestSuite {
     }
 
 
-    private function mapToPartsCost($item,$prtsCosts = [],$extractPartsPercent = []){
+    private function mapToPartsCost($item,$prtsCosts = [], $extractPartsPercent = []){
 
 
         $lineCodes = [];
@@ -170,6 +171,7 @@ class Core extends TestSuite {
 
 
         $key = 0;
+        $percentMap = [];
         foreach($lineCodes as $value){
 
             
@@ -183,10 +185,11 @@ class Core extends TestSuite {
                         'PARTS_COST' => $prtsCosts['PARTS_COST'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0,
                         'PARTS_SALE' => $prtsCosts['PARTS_SALE'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0
                     ],
-                    'percentages' => $extractPartsPercent[$key]
+                    'percentages' => $extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0]
                 ];*/
 
-            if(
+
+             if(
                 !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])
             ){
                 
@@ -209,18 +212,17 @@ class Core extends TestSuite {
                     ]
                 ] ?? 0;
 
-                $partsCostMap[] = [
-                    'PARTS_COST' => $partCost*((int)$extractPartsPercent[$key]/100),
-                    'PARTS_SALE' => $partSale*((int)$extractPartsPercent[$key]/100)
-                ];
+                $extractPartsPrcnt = $extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0] ?? 0;
+                unset($extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0]);
 
+                $partsCostMap[] = [
+                    'PARTS_COST' => $partCost*((int)$extractPartsPrcnt/100),
+                    'PARTS_SALE' => $partSale*((int)$extractPartsPrcnt/100)
+                ];
             }
+
             $key++;
         }
-
-        //return $sequenceNoMap;
-
-//        return $lineCodeMap;
 
 
         return $partsCostMap;
@@ -268,6 +270,8 @@ class Core extends TestSuite {
             $partPercentages[] = $part; 
         }
 
+
+
         $count = is_array($lbrLines) ? count($lbrLines) : 1;
         $pCount = count($partPercentages);
 
@@ -283,6 +287,8 @@ class Core extends TestSuite {
                 }
             }
         }
+
+
 
         $newPartPercentages = [];
         $lineCounters = [];
@@ -301,7 +307,12 @@ class Core extends TestSuite {
                 }else {
                     $counter = $lineCounters[$line];
                     for($c=0;$c<$counter;$c++){
-                        $newPartPercentages[$line][$c] = $percentageIndexes[$line][$c] ?? $percentageIndexes[$line];
+                        $newPartPercentages[$line][$c] = $percentageIndexes[$line][$c] ?? false;
+                    }
+                    foreach($newPartPercentages[$line] as $key => $partCheck){
+                        if(!$partCheck){
+                            unset($newPartPercentages[$line][$key]);
+                        }
                     }
                 }
             }
@@ -318,7 +329,11 @@ class Core extends TestSuite {
             }
         }
 
-        $combinedPercentagesList = [];
+
+        return $newPartPercentages;
+        
+
+        /*$combinedPercentagesList = [];
         foreach($newPartPercentages as $part){
             $count = count($part);
             if($count>1){
@@ -330,11 +345,9 @@ class Core extends TestSuite {
             }
         }
 
-        return $combinedPercentagesList;
+        return $combinedPercentagesList;*/
 
     }
-
-
 
 
 
@@ -417,6 +430,9 @@ class Core extends TestSuite {
      * 
      * 
      */
+
+
+
 
 
 
