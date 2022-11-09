@@ -172,6 +172,8 @@ class Core extends TestSuite {
 
         $key = 0;
         $percentMap = [];
+        $extractPartsPercentageCount = [];
+
         foreach($lineCodes as $value){
 
             
@@ -189,7 +191,7 @@ class Core extends TestSuite {
                 ];*/
 
 
-             if(
+            if(
                 !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])
             ){
                 
@@ -212,8 +214,17 @@ class Core extends TestSuite {
                     ]
                 ] ?? 0;
 
-                $extractPartsPrcnt = $extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0] ?? 0;
-                unset($extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0]);
+                $extractPartsPercentageCount[$item[$this->serviceRo->LBRLINECODE]['V'][$key]] = (
+                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRLINECODE]['V'][$key]] ?? 0
+                );
+
+                $extractPartsPrcnt = $extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][
+                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRLINECODE]['V'][$key]]
+                ] ?? 0;
+                
+                $extractPartsPercentageCount[$item[$this->serviceRo->LBRLINECODE]['V'][$key]] = (
+                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRLINECODE]['V'][$key]]+1
+                );
 
                 $partsCostMap[] = [
                     'PARTS_COST' => $partCost*((int)$extractPartsPrcnt/100),
@@ -223,7 +234,6 @@ class Core extends TestSuite {
 
             $key++;
         }
-
 
         return $partsCostMap;
 
