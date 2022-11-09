@@ -210,8 +210,8 @@ class Core extends TestSuite {
                 ] ?? 0;
 
                 $partsCostMap[] = [
-                    'PARTS_COST' => $partCost*((int)$extractPartsPercent[$key]/100),
-                    'PARTS_SALE' => $partSale*((int)$extractPartsPercent[$key]/100)
+                    'PARTS_COST' => $partCost*((int)$extractPartsPercentData/100),
+                    'PARTS_SALE' => $partSale*((int)$extractPartsPercentData/100)
                 ];
 
             }
