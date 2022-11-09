@@ -102,7 +102,8 @@ class Core extends TestSuite {
             if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
-
+                
+                //$this->runTestSuite2($item,$RO);
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
@@ -141,6 +142,7 @@ class Core extends TestSuite {
 
     private function mapToPartsCost($item,$prtsCosts = [],$extractPartsPercent = []){
 
+
         $lineCodes = [];
         $lineCodeMap = [];
         $sequenceNoMap = [];
@@ -153,12 +155,10 @@ class Core extends TestSuite {
         if(is_array($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
             foreach($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'] as $key => $sequenceNo){
                 $sequenceNoMap[$sequenceNo] = $item[$this->serviceRo->PRTLINECODE]['V'][$key];
-                $sequences[] = $sequenceNo;
             }
         }else {
-            $sequenceNoMap[] = $item[$this->serviceRo->PRTLINECODE]['V'];
+            $sequenceNoMap[$item[$this->serviceRo->PRTLABORSEQUENCENO]['V']] = $item[$this->serviceRo->PRTLINECODE]['V'];
         }
-
 
         if(is_array($item[$this->serviceRo->LBRLINECODE]['V'])){
             foreach($item[$this->serviceRo->LBRLINECODE]['V'] as $lineCode){
@@ -169,14 +169,12 @@ class Core extends TestSuite {
         }
 
 
-
         $key = 0;
         foreach($lineCodes as $value){
 
-                
-
+            
                   // -- Debug Only ::
-               /* $lineCodeMap[] = [
+               /*$lineCodeMap[] = [
                     'line' => $value,
                     'key' => $key,
                     'opcode' => $item[$this->serviceRo->LBROPCODE]['V'][$key] ?? '',
@@ -188,48 +186,41 @@ class Core extends TestSuite {
                     'percentages' => $extractPartsPercent[$key]
                 ];*/
 
-
             if(
-                !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]) && !isset($sequenceNoMap[$key])
+                !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])
             ){
                 
-                if(in_array($value,$sequenceNoMap)){
-                    $key = array_search($value,$sequenceNoMap);
-                    $partsCostMap[] = [
-                        'PARTS_COST' => $prtsCosts['PARTS_COST'][$value],
-                        'PARTS_SALE' => $prtsCosts['PARTS_SALE'][$value]
-                    ];
-                    unset($sequenceNoMap[$key]);
-                }else {
+                $partsCostMap[] = [
+                    'PARTS_COST' => 0,
+                    'PARTS_SALE' => 0
+                ];
 
-                    $partsCostMap[] = [
-                        'PARTS_COST' => 0,
-                        'PARTS_SALE' => 0
-                    ];
-                }
-        
             }else {
 
                 $partCost = $prtsCosts['PARTS_COST'][
                     $sequenceNoMap[
                         $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
-                    ] ?? $sequenceNoMap[$key] 
+                    ]
                 ] ?? 0;
 
                 $partSale = $prtsCosts['PARTS_SALE'][
                     $sequenceNoMap[
                         $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
-                    ] ?? $sequenceNoMap[$key]
+                    ]
                 ] ?? 0;
 
                 $partsCostMap[] = [
-                    'PARTS_COST' => $partCost*($extractPartsPercent[$key]/100),
-                    'PARTS_SALE' => $partSale*($extractPartsPercent[$key]/100)
+                    'PARTS_COST' => $partCost*((int)$extractPartsPercentData/100),
+                    'PARTS_SALE' => $partSale*((int)$extractPartsPercentData/100)
                 ];
 
             }
             $key++;
         }
+
+        //return $sequenceNoMap;
+
+//        return $lineCodeMap;
 
 
         return $partsCostMap;
