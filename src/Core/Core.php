@@ -94,7 +94,7 @@ class Core extends TestSuite {
             ];
         }
 
-        $this->runTestSuite($items[$responseObj]);
+        //$this->runTestSuite($items[$responseObj]);
 
         $extractData = [];
         foreach($items[$responseObj] as $item){
@@ -103,7 +103,6 @@ class Core extends TestSuite {
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
 
-                //$this->runTestSuite2($item,$RO);
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
@@ -169,11 +168,15 @@ class Core extends TestSuite {
             $lineCodes[] = $item[$this->serviceRo->LBRLINECODE]['V'];
         }
 
+
+
         $key = 0;
         foreach($lineCodes as $value){
 
+                
+
                   // -- Debug Only ::
-                /* $lineCodeMap[] = [
+               /* $lineCodeMap[] = [
                     'line' => $value,
                     'key' => $key,
                     'opcode' => $item[$this->serviceRo->LBROPCODE]['V'][$key] ?? '',
@@ -189,10 +192,21 @@ class Core extends TestSuite {
             if(
                 !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]) && !isset($sequenceNoMap[$key])
             ){
-                $partsCostMap[] = [
-                    'PARTS_COST' => 0,
-                    'PARTS_SALE' => 0
-                ];
+                
+                if(in_array($value,$sequenceNoMap)){
+                    $key = array_search($value,$sequenceNoMap);
+                    $partsCostMap[] = [
+                        'PARTS_COST' => $prtsCosts['PARTS_COST'][$value],
+                        'PARTS_SALE' => $prtsCosts['PARTS_SALE'][$value]
+                    ];
+                    unset($sequenceNoMap[$key]);
+                }else {
+
+                    $partsCostMap[] = [
+                        'PARTS_COST' => 0,
+                        'PARTS_SALE' => 0
+                    ];
+                }
         
             }else {
 
@@ -216,6 +230,7 @@ class Core extends TestSuite {
             }
             $key++;
         }
+
 
         return $partsCostMap;
 
