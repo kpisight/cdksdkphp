@@ -107,12 +107,14 @@ class Core extends TestSuite {
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
-                $partsCostMap = $this->mapToPartsCost($item,$extractPartsCost,$extractPartsPercent);
+                $partsCostMap = $this->mapToPartsCost(
+                    $item,
+                    $extractPartsCost,
+                    $extractPartsPercent,
+                    $prtsMap
+                );
 
                 $this->runTestSuite2($extractPartsPercent,$RO);
-
-                //$this->runTestSuite2($extractPartsPercent,$RO);
-                //$this->runTestSuite2($extractPartsCost,$RO);
                 $this->runTestSuite2($partsCostMap, $RO);
 
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
@@ -122,7 +124,7 @@ class Core extends TestSuite {
                     }
                 }
 
-                //$this->runTestSuite2(end($extractData),$RO);
+                $this->runTestSuite2(end($extractData),$RO);
                 
                 if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
@@ -130,6 +132,8 @@ class Core extends TestSuite {
                         $extractData[] = $this->parseResponse($item,$feeMap,$i,$partsCostMap,$this->serviceRo->feeOpCodeSkip(),true);
                     }
                 }
+
+               
 
 
             }else {
@@ -141,13 +145,17 @@ class Core extends TestSuite {
     }
 
 
-    private function mapToPartsCost($item,$prtsCosts = [], $extractPartsPercent = []){
+    private function mapToPartsCost($item,$prtsCosts = [], $extractPartsPercent = [], $prtsMap = []){
 
 
         $lineCodes = [];
         $lineCodeMap = [];
         $sequenceNoMap = [];
         $sequences = [];
+
+        $prtsMap = array_flip($prtsMap);
+        $partCostLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDCOST];
+        $partSaleLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDSALE];
 
         if(!isset($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
             return [];
@@ -176,39 +184,24 @@ class Core extends TestSuite {
 
         foreach($lineCodes as $value){
 
-            
-                  // -- Debug Only ::
-               /*$lineCodeMap[] = [
-                    'line' => $value,
-                    'key' => $key,
-                    'opcode' => $item[$this->serviceRo->LBROPCODE]['V'][$key] ?? '',
-                    'labourSequenceNo' => $sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]] ?? false,
-                    'parts' => [
-                        'PARTS_COST' => $prtsCosts['PARTS_COST'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0,
-                        'PARTS_SALE' => $prtsCosts['PARTS_SALE'][$sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]] ?? 0
-                    ],
-                    'percentages' => $extractPartsPercent[$item[$this->serviceRo->LBRLINECODE]['V'][$key]][0]
-                ];*/
-
-
             if(
                 !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])
             ){
                 
                 $partsCostMap[] = [
-                    'PARTS_COST' => 0,
-                    'PARTS_SALE' => 0
+                    $partCostLabel => 0,
+                    $partSaleLabel => 0
                 ];
 
             }else {
 
-                $partCost = $prtsCosts['PARTS_COST'][
+                $partCost = $prtsCosts[$partCostLabel][
                     $sequenceNoMap[
                         $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
                     ]
                 ] ?? 0;
 
-                $partSale = $prtsCosts['PARTS_SALE'][
+                $partSale = $prtsCosts[$partSaleLabel][
                     $sequenceNoMap[
                         $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]
                     ]
@@ -227,8 +220,8 @@ class Core extends TestSuite {
                 );
 
                 $partsCostMap[] = [
-                    'PARTS_COST' => $partCost*((int)$extractPartsPrcnt/100),
-                    'PARTS_SALE' => $partSale*((int)$extractPartsPrcnt/100)
+                    $partCostLabel => $partCost*((int)$extractPartsPrcnt/100),
+                    $partSaleLabel => $partSale*((int)$extractPartsPrcnt/100)
                 ];
             }
 
@@ -280,8 +273,6 @@ class Core extends TestSuite {
             $partPercentages[] = $part; 
         }
 
-
-
         $count = is_array($lbrLines) ? count($lbrLines) : 1;
         $pCount = count($partPercentages);
 
@@ -297,8 +288,6 @@ class Core extends TestSuite {
                 }
             }
         }
-
-
 
         $newPartPercentages = [];
         $lineCounters = [];
@@ -339,24 +328,8 @@ class Core extends TestSuite {
             }
         }
 
-
         return $newPartPercentages;
         
-
-        /*$combinedPercentagesList = [];
-        foreach($newPartPercentages as $part){
-            $count = count($part);
-            if($count>1){
-                for($i=0;$i<$count;$i++){
-                    $combinedPercentagesList[] = $part[$i];
-                }
-            }else {
-                $combinedPercentagesList[] = $part[0];
-            }
-        }
-
-        return $combinedPercentagesList;*/
-
     }
 
 
@@ -421,31 +394,6 @@ class Core extends TestSuite {
 
         return $response;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /****
-     * 
-     *  LEGACY
-     * 
-     * 
-     */
-
-
-
-
-
-
 
     private function parsePartsData($item,$prtsMap){
         
@@ -534,12 +482,6 @@ class Core extends TestSuite {
     }
 
 
-
-
-
-    
-
-
     private function parseResponseRaw($data,$map){
         $response = [];
         $fields = array_values($map);
@@ -571,10 +513,11 @@ class Core extends TestSuite {
                 }
                 return (string)number_format((float)$value, 2, '.', '');
             }
-            return (int)$value;
+            return (float)$value;
         }
         return $value;
     }   
+
 
 
 }
