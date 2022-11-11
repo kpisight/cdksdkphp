@@ -13,7 +13,7 @@ class Cdk extends Core {
             $this->testSuiteConfig
         );
 
-        $this->setTestSuiteConfig(
+        $this->tests->setTestSuiteConfig(
             $this->config->testSuite()
         );
 

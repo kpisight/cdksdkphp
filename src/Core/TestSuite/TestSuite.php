@@ -60,7 +60,7 @@ class TestSuite {
     /**
      *  @ Tests ::
      */
-    private function outputRoTest($item){
+    public function outputRoTest($item){
 
 
         echo $item['RONumber'] . ' --- ' . json_encode($this->investigate) . "\n\n";
