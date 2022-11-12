@@ -105,7 +105,7 @@ class Core extends Parser {
             if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
             {
                 $RO = $item[$this->serviceRo->RONUMBER];
-                
+
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
                 $extractPartsPercent = $this->parsePartsDataPercent($item);
                 $partsCostMap = $this->mapToPartsCost(
