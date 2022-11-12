@@ -5,19 +5,23 @@ include_once __DIR__ . '/../Helpers/Helpers.php';
 class Parser extends Helpers {
 
     public function parsePartsData($item,$prtsMap){
-        
+
         $keys = array_keys($item);
+
+        $lbrLineCodes = [];
+        $lbrLbrType = [];
+        $lbrSequenceNo = [];
+        $lbrDataLines = [];
+
+        $prtLbrSequenceNo = [];
+        $prtLbrTypes = [];
+        $prtDataLines = [];
+        $prtLineCodes = [];
 
         $prtsExtendedCost = [];
         $prtsExtendedSale = [];
-        $prtsLineCode = [];
-        $prtsSequenceNo = [];
 
-        $prtsCost = [];
-        $prtsSale = [];
-        
         foreach($keys as $key){
-            
             if(!isset($item[$key]['V'])){
                 continue;
             }
@@ -42,32 +46,79 @@ class Parser extends Helpers {
                 }
             }
 
-            if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLINECODE)){
+
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRLINECODE)){
                 if(is_array($item[$key]['V'])){
                     foreach($item[$key]['V'] as $value){
-                        $prtsLineCode[] = $this->cleanResponse($value);
+                        $lbrLineCodes[] = $this->cleanResponse($value);
                     }
                 }else {
-                    $prtsLineCode[] = $this->cleanResponse($item[$key]['V']);
+                    $lbrLineCodes[] = $this->cleanResponse($item[$key]['V']);
+                }
+            }
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRLABORTYPE)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $lbrLbrType[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $lbrLbrType[] = $this->cleanResponse($item[$key]['V']);
+                }
+            }
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRSEQUENCENO)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $lbrSequenceNo[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $lbrSequenceNo[] = $this->cleanResponse($item[$key]['V']);
                 }
             }
 
-           
-            if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLABORSEQUENCENO)){
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLINECODE)){
                 if(is_array($item[$key]['V'])){
-                    foreach($item[$key]['V'] as $key => $value){
-                        $prtsSequenceNo[] = $this->cleanResponse($value);
+                    foreach($item[$key]['V'] as $value){
+                        $prtLineCodes[] = $this->cleanResponse($value);
                     }
                 }else {
-                    $prtsSequenceNo[] = $this->cleanResponse($item[$key]['V']);
+                    $prtLineCodes[] = $this->cleanResponse($item[$key]['V']);
                 }
             }
+
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLABORTYPE)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $prtLbrTypes[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $prtLbrTypes[] = $this->cleanResponse($item[$key]['V']);
+                }
+            }
+
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->PRTLABORSEQUENCENO)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $prtLbrSequenceNo[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $prtLbrSequenceNo[] = $this->cleanResponse($item[$key]['V']);
+                }
+            }
+
+        }
+
+        foreach($lbrLineCodes as $key => $line){
+            $lbrDataLines[] = $lbrLineCodes[$key] . $lbrLbrType[$key] . $lbrSequenceNo[$key];
+        }
+
+        foreach($prtLineCodes as $key => $code){
+            $prtDataLines[] = $prtLineCodes[$key] . $prtLbrTypes[$key] . $prtLbrSequenceNo[$key];
         }
 
 
 
         $partsLineCodeList = [];
-        foreach($prtsSequenceNo as $key => $lineCode){
+        foreach($prtDataLines as $key => $lineCode){
             array_push($partsLineCodeList,$lineCode); 
         }
 
@@ -104,89 +155,73 @@ class Parser extends Helpers {
 
     }
 
+    public function mapToPartsCost($item, $prtsCosts = [], $extractPartsPercent = [], $prtsMap = []){
 
-    public function mapToPartsCost($item,$prtsCosts = [], $extractPartsPercent = [], $prtsMap = []){
-
-        $lineCodes = [];
-        $lineCodeMap = [];
-        $sequenceNoMap = [];
-        $sequences = [];
+        $lbrLineCodes = [];
+        $lbrLbrType = [];
+        $lbrSequenceNo = [];
+        $lbrDataLines = [];
 
         $prtsMap = array_flip($prtsMap);
         $partCostLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDCOST];
         $partSaleLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDSALE];
 
-        if(!isset($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
-            return [];
-        }
+        $keys = array_keys($item);
 
-        if(is_array($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'])){
-            foreach($item[$this->serviceRo->PRTLABORSEQUENCENO]['V'] as $key => $sequenceNo){
-                $sequenceNoMap[$sequenceNo] = $item[$this->serviceRo->PRTLINECODE]['V'][$key];
+        foreach($keys as $key){
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRLINECODE)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $lbrLineCodes[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $lbrLineCodes[] = $this->cleanResponse($item[$key]['V']);
+                }
             }
-        }else {
-            $sequenceNoMap[$item[$this->serviceRo->PRTLABORSEQUENCENO]['V']] = $item[$this->serviceRo->PRTLINECODE]['V'];
-        }
-
-    
-        if(is_array($item[$this->serviceRo->LBRLINECODE]['V'])){
-            foreach($item[$this->serviceRo->LBRLINECODE]['V'] as $lineCode){
-                $lineCodes[] = $lineCode;
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRLABORTYPE)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $lbrLbrType[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $lbrLbrType[] = $this->cleanResponse($item[$key]['V']);
+                }
             }
-        }else {
-            $lineCodes[] = $item[$this->serviceRo->LBRLINECODE]['V'];
+            if(isset($item[$key]['V']) && ($key === $this->serviceRo->LBRSEQUENCENO)){
+                if(is_array($item[$key]['V'])){
+                    foreach($item[$key]['V'] as $value){
+                        $lbrSequenceNo[] = $this->cleanResponse($value);
+                    }
+                }else {
+                    $lbrSequenceNo[] = $this->cleanResponse($item[$key]['V']);
+                }
+            }
         }
 
-        $key = 0;
-        $percentMap = [];
-        $extractPartsPercentageCount = [];
-        $debug = [];
+        
+        foreach($lbrLineCodes as $key => $line){
 
-        foreach($lineCodes as $value){
+            $partDataLine = $lbrLineCodes[$key] . $lbrLbrType[$key] . $lbrSequenceNo[$key];
 
-            if(
-                !isset($sequenceNoMap[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]])
-            ){
-                
+            if(!isset($prtsCosts[$partCostLabel][$partDataLine])){
                 $partsCostMap[] = [
                     $partCostLabel => 0,
                     $partSaleLabel => 0
                 ];
-
-            }else {
-
-                $partIdentifier = $item[$this->serviceRo->LBRSEQUENCENO]['V'][$key];
-                
-                $partCost = $prtsCosts[$partCostLabel][$partIdentifier] ?? 0;
-                $partSale = $prtsCosts[$partSaleLabel][$partIdentifier] ?? 0;
-
-                $extractPartsPercentageCount[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]] = (
-                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]] ?? 0
-                );
-
-                $extractPartsPrcnt = $extractPartsPercent[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]][
-                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]
-                ] ?? 0;
-                
-                $extractPartsPercentageCount[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]] = (
-                    $extractPartsPercentageCount[$item[$this->serviceRo->LBRSEQUENCENO]['V'][$key]]+1
-                );
-
-                $partsCostMap[] = [
-                    $partCostLabel => $partCost*((int)$extractPartsPrcnt/100),
-                    $partSaleLabel => $partSale*((int)$extractPartsPrcnt/100)
-                ];
-
+                continue;
             }
 
-            $key++;
+            $partsCostMap[] = [
+                $partCostLabel => $prtsCosts[$partCostLabel][$partDataLine],
+                $partSaleLabel => $prtsCosts[$partSaleLabel][$partDataLine]
+            ];
         }
 
         return $partsCostMap;
 
     }
 
-
+    
     public function parsePartsDataPercent($item){
 
         $keys = array_keys($item);
