@@ -45,6 +45,14 @@ class Core extends Parser {
             return $this->response->errorResponse("Missing 'type' param in SDK object.", false);
         }
 
+        $rawObjKey = strtoupper(
+            $this->makeKey(
+                $this->createRandPhrase(5)
+            )
+        );
+
+        $rawFile = __DIR__ . $this->config->rawDir() . $rawObjKey . '.cdk';
+
         $cleanParams = [];
         foreach($data['request'] as $key => $value){
             $cleanParams = $this->extract->queryBuilder($cleanParams, [$key => $value]);
@@ -55,31 +63,13 @@ class Core extends Parser {
             $response = $this->httpCache->get($data['type'],$cleanParams);
         }
         if(!$response){
-            $response = $this->http->post($data['type'],$cleanParams);
+            $response = $this->http->post($data['type'],$cleanParams,true,$rawFile);
         }
 
         if($this->cache && $response){
             $cache = $this->httpCache->save($data['type'],$cleanParams,$response);
+            file_put_contents($rawFile,$response['response']);
         }
-
-        if(isset($response['status'])){
-            return [
-                'status' => 'error', 
-                'message' => $response['message'],
-                'raw-response' => $response
-            ];
-        }
-
-        $rawObjKey = strtoupper(
-            $this->makeKey(
-                $this->createRandPhrase(5)
-            )
-        );
-
-        file_put_contents(
-            __DIR__ . $this->config->rawDir() . $rawObjKey . '.cdk', 
-            $response['response']
-        );
 
         return $rawObjKey;
 
