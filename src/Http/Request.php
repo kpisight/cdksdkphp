@@ -13,7 +13,7 @@ class Http {
         $this->set();
     }
 
-    public function post($endpoint,$data = []){
+    public function post($endpoint, $data = [], $stream = false, $rawFile = ''){
 
         $additionalHeaders = '';
 
@@ -35,7 +35,15 @@ class Http {
         curl_setopt($ch, CURLOPT_TIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+
+        if($stream){
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch,$data) use ($rawFile) {
+                file_put_contents($rawFile,$data,FILE_APPEND | LOCK_EX);
+                return strlen($data);
+            });
+        }
 
         $response = curl_exec($ch);
 
@@ -43,17 +51,22 @@ class Http {
         if (!curl_errno($ch)) {
             $info = curl_getinfo($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $response = $this->response($info,$httpCode,$response);
+            $errorResponse = $this->response($info,$httpCode,$response);
         }
 
         curl_close($ch);
+
+        $dataResponse = false;
+        if(is_file($rawFile)){
+            $dataResponse = file_get_contents($rawFile);
+        }
 
         return [
             'request' => [
                 'headers' => $requestHeaders, 
                 'url' => $requestUrl
             ], 
-            'response' => $response
+            'response' => $dataResponse ?? $errorResponse
         ];
 
     }
