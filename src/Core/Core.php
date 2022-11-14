@@ -18,7 +18,8 @@ class Core extends Parser {
         public $lines = false,
         public $testSuiteConfig = [],
         public $cache = false,
-        public $cacheDir = ''
+        public $cacheDir = '',
+        public $rawDir = ''
     ){
 
         // -- Set Test Suite ::
@@ -34,7 +35,7 @@ class Core extends Parser {
         $this->types = new Types();
     }
 
-    public function extract($data = [], $map = ['master' => [], 'prtextended' => []]){
+    public function extract($data = []){
 
         if(!isset($data['request'])){
             return $this->response->errorResponse("Missing 'request' param in SDK object.", false);
@@ -69,6 +70,30 @@ class Core extends Parser {
             ];
         }
 
+        $rawObjKey = strtoupper(
+            $this->makeKey(
+                $this->createRandPhrase(5)
+            )
+        );
+
+        file_put_contents(
+            __DIR__ . $this->config->rawDir() . $rawObjKey . '.cdk', 
+            $response['response']
+        );
+
+        return $rawObjKey;
+
+    }
+
+    public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []]){
+
+        /**
+         *  @ Get the DataObject ::
+         */
+        $response = file_get_contents(
+            __DIR__ . $this->config->rawDir() . $id . '.cdk'
+        );
+
         /**
          *  @ Setup Mappers ::
         */
@@ -84,7 +109,7 @@ class Core extends Parser {
 
         $items = json_decode(
             json_encode(
-                (array)simplexml_load_string($response['response'], 'SimpleXMLElement', LIBXML_NOCDATA)
+                (array)simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA)
         ), 
         true);
 
@@ -94,8 +119,7 @@ class Core extends Parser {
                 'status' => 'error',
                 'message' => 'No data available for this request.',
                 'returned' => $items,
-                'xml-response' => $response['response'],
-                'raw-response' => $response
+                'xml-response' => $response
             ];
         }
 
@@ -134,6 +158,14 @@ class Core extends Parser {
             }
         }
 
+        /**
+         *  @ Delete the RAW file ::
+         */
+        unlink( __DIR__ . $this->config->rawDir() . $id . '.cdk');
+
+        /**
+         *  @ Return the Extracted Data ::
+         */
         return $extractData;
     }
 

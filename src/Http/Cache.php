@@ -1,6 +1,7 @@
 <?php 
 
 include_once __DIR__ . '/../Core/Model/Types.php';
+include_once __DIR__ . '/../Core/Helpers/Helpers.php';
 
 class HttpCache {
 
@@ -10,6 +11,7 @@ class HttpCache {
         public $install = 'install'
     ){
         $this->Types = new Types();
+        $this->Helpers = new Helpers();
     }
 
     public function get($type,$params){
@@ -44,7 +46,7 @@ class HttpCache {
         foreach($items as $p){
             $type .= $p;
         }
-        return sha1(base64_encode($type));
+        return $this->Helpers->makeKey($type);
     }
 
 

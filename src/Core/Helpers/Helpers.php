@@ -24,7 +24,32 @@ class Helpers {
             return (float)$value;
         }
         return $value;
-    }   
+    }
+
+    public function makeKey($obj){
+        return sha1(base64_encode($obj));
+    }
+    
+    public function createRandPhrase($count = 10){
+
+        $words = [
+            'rule','arise','father','applaud','opera','frequency','receipt','coup','manage','response','bench','spider',
+            'word','golf','composer','freckle','chin','harsh','wardrobe','still','happy','hover','apparatus','speech',
+            'super','wow','nice','mother'
+        ];
+
+        $phrase = '';
+
+        for($i=0;$i<$count;$i++){
+            $phrase .= $words[array_rand($words)] . '-';
+            if($i==($count-1)){
+                $phrase .= $words[array_rand($words)];
+            }
+        }
+
+        return $phrase;
+
+    }
 
     
 }

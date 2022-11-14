@@ -12,7 +12,8 @@ class CdkConfig {
         public $environment,
         public $testSuite = [],
         public $cache = false,
-        public $cacheDir = ''
+        public $cacheDir = '',
+        public $rawDir = ''
     ){
         $this->Response = new Response;
     }
@@ -50,6 +51,10 @@ class CdkConfig {
 
     public function cache(){
         return $this->cache;
+    }
+
+    public function rawDir(){
+        return $this->rawDir;
     }
 
     public function cacheDir(){
