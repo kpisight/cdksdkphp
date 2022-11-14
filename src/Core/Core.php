@@ -169,9 +169,7 @@ class Core extends Parser {
         return $extractData;
     }
 
-
-
-
+    
     private function parseResponse($data,$map,$number = 0, $partsCostMap = [], $ignored = [], $isFeeLine = false, $keyNumbers = []){
 
         $response = [];
