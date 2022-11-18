@@ -5,18 +5,22 @@ class Types {
     public $SERVICE_RO_HISTORY_QUERYID = 'SROD_History_DateRange';
     public $SERVICE_RO_HISTORY = 'service-ro-history/extract';
     public $SERVICE_RO_HISTORY_OBJ = 'service-repair-order-history';
+    public $SERVICE_RO_HISTORY_PARENT_OBJ = 'ServiceRODetailHistory';
 
     public $SERVICE_RO_CLOSED_QUERYID = 'SROD_Closed_DateRange';
     public $SERVICE_RO_CLOSED = 'service-ro-closed/extract';
     public $SERVICE_RO_CLOSED_OBJ = 'service-repair-order-closed';
+    public $SERVICE_RO_CLOSED_PARENT_OBJ = 'ServiceRODetailClosed';
 
     public $HELP_EMPLOYEE_QUERYID = 'HEMPL_Bulk_Service';
     public $HELP_EMPLOYEE = 'help-employee/extract';
     public $HELP_EMPLOYEE_OBJ = 'HelpEmployee';
+    public $HELP_EMPLOYEE_PARENT_OBJ = '';
 
     public $HELP_EMPLOYEE_DELTA_QUERYID = 'HEMPL_Delta_Service';
     public $HELP_EMPLOYEE_DELTA = 'help-employee/extract';
     public $HELP_EMPLOYEE_DELTA_OBJ = 'HelpEmployee';
+    public $HELP_EMPLOYEE_DELTA_PARENT_OBJ = '';
 
     public function roHistoryExtract(){
         return $this->SERVICE_RO_HISTORY;
@@ -70,17 +74,28 @@ class Types {
             $this->SERVICE_RO_HISTORY
         ];
     }
+
     public function pullTypes(){
         return [
             $this->SERVICE_RO_CLOSED
         ];
     }
+
     public function renderTypeObj($type){
         switch($type){
             case $this->SERVICE_RO_HISTORY : return $this->SERVICE_RO_HISTORY_OBJ; break;
             case $this->SERVICE_RO_CLOSED : return $this->SERVICE_RO_CLOSED_OBJ; break;
             case $this->HELP_EMPLOYEE : return $this->HELP_EMPLOYEE_OBJ; break;
             case $this->HELP_EMPLOYEE_DELTA : return $this->HELP_EMPLOYEE_DELTA_OBJ; break;
+        }
+    }
+
+    public function renderParentTypeObj($type){
+        switch($type){
+            case $this->SERVICE_RO_HISTORY : return $this->SERVICE_RO_HISTORY_PARENT_OBJ; break;
+            case $this->SERVICE_RO_CLOSED : return $this->SERVICE_RO_CLOSED_PARENT_OBJ; break;
+            case $this->HELP_EMPLOYEE : return $this->HELP_EMPLOYEE_PARENT_OBJ; break;
+            case $this->HELP_EMPLOYEE_DELTA : return $this->HELP_EMPLOYEE_DELTA_PARENT_OBJ; break;
         }
     }
 
