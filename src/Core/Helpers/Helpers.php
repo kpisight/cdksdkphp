@@ -50,6 +50,5 @@ class Helpers {
         return $phrase;
 
     }
-
     
 }
