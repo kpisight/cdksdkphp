@@ -56,17 +56,12 @@ class Http {
 
         curl_close($ch);
 
-        $dataResponse = false;
-        if(is_file($rawFile)){
-            $dataResponse = file_get_contents($rawFile);
-        }
-
         return [
             'request' => [
                 'headers' => $requestHeaders, 
                 'url' => $requestUrl
             ], 
-            'response' => $dataResponse ?? $errorResponse
+            'response' => $dataResponse ?? false
         ];
 
     }

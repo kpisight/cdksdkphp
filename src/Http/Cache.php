@@ -22,10 +22,10 @@ class HttpCache {
         return false;
     }
 
-    public function save($type,$params,$data = []){
+    public function save($type,$params,$rawFile = ''){
         $cacheFile = $this->getFileName($type,$params);
         file_put_contents(
-            $cacheFile, json_encode($data)
+            $cacheFile, file_get_contents($rawFile)
         );
     }
 
