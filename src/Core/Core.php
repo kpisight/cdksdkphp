@@ -9,6 +9,7 @@ include_once __DIR__ . '/Model/Employee.php';
 include_once __DIR__ . '/Model/Types.php';
 include_once __DIR__ . '/TestSuite/TestSuite.php';
 include_once __DIR__ . '/Parser/Parser.php';
+include_once __DIR__ . '/Parser/Xml.php';
 
 class Core extends Parser {
 
@@ -33,6 +34,7 @@ class Core extends Parser {
         $this->serviceRo = new ServiceRo();
         $this->employee = new Employee();
         $this->types = new Types();
+        $this->xml = new XmlHandler();
     }
 
     public function extract($data = []){
@@ -63,12 +65,11 @@ class Core extends Parser {
             $response = $this->httpCache->get($data['type'],$cleanParams);
         }
         if(!$response){
-            $response = $this->http->post($data['type'],$cleanParams,true,$rawFile);
+            $response = $this->http->post($data['type'],$cleanParams,$rawFile);
         }
 
         if($this->cache && $response){
-            $cache = $this->httpCache->save($data['type'],$cleanParams,$response);
-            file_put_contents($rawFile,$response['response']);
+            $cache = $this->httpCache->save($data['type'],$cleanParams,$rawFile);
         }
 
         return $rawObjKey;
@@ -80,9 +81,39 @@ class Core extends Parser {
         /**
          *  @ Get the DataObject ::
          */
-        $response = file_get_contents(
-            __DIR__ . $this->config->rawDir() . $id . '.cdk'
-        );
+        $rawFile = __DIR__ . $this->config->rawDir() . $id . '.cdk';
+
+        /**
+         *  @ Break Down the Chunks
+         */
+        $rawDir = __DIR__ . $this->config->rawDir() . $id;
+        if(!is_dir($rawDir)){
+            mkdir($rawDir);
+        }
+
+        $responseObj = $this->types->renderTypeObj($data['type']);
+        $responseParentObj = $this->types->renderParentTypeObj($data['type']);
+
+        /**
+         *  @ Save Chunked Data to Directory ::
+         */
+    
+        $renderAllXmlChunks = $this->xml->readXml($rawFile,$rawDir,$responseObj,$responseParentObj);
+
+        $availableChunks = array_values(array_diff(scandir($rawDir), array('.', '..')));
+        $list = [];
+        foreach($availableChunks as $chunk){
+            $list[] = $rawDir . '/' . $chunk;
+        }
+
+        return $list;
+ 
+    }
+
+
+    public function handleDataFile($file, $data, $map){
+
+        $response = file_get_contents($file);
 
         /**
          *  @ Setup Mappers ::
@@ -151,12 +182,22 @@ class Core extends Parser {
         /**
          *  @ Delete the RAW file ::
          */
-        unlink( __DIR__ . $this->config->rawDir() . $id . '.cdk');
+        unlink($file);
 
         /**
          *  @ Return the Extracted Data ::
          */
         return $extractData;
+
+    }
+
+
+    public function handleDeconstruct($hash){
+        // -- Remove Temp Directory ::
+        rmdir(__DIR__ . $this->config->rawDir() . $hash);
+        
+        // -- Remove Temp File ::
+        unlink(__DIR__ . $this->config->rawDir() . $hash . '.cdk');
     }
 
     
@@ -232,5 +273,7 @@ class Core extends Parser {
         }
         return $response;
     }
+
+
 
 }
