@@ -47,8 +47,6 @@ class Core extends Parser {
             return $this->response->errorResponse("Missing 'type' param in SDK object.", false);
         }
 
-        //return '7754EEE1BA7B98B62430C5257C1CD701D73B05E4';
-
         $rawObjKey = strtoupper(
             $this->makeKey(
                 $this->createRandPhrase(5)
@@ -67,7 +65,7 @@ class Core extends Parser {
             $response = $this->httpCache->get($data['type'],$cleanParams);
         }
         if(!$response){
-            $response = $this->http->post($data['type'],$cleanParams,true,$rawFile);
+            $response = $this->http->post($data['type'],$cleanParams,$rawFile);
         }
 
         if($this->cache && $response){
