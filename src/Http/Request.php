@@ -13,7 +13,7 @@ class Http {
         $this->set();
     }
 
-    public function post($endpoint, $data = [], $stream = false, $rawFile = ''){
+    public function post($endpoint, $data = [], $rawFile = '', $stream = false){
 
         $additionalHeaders = '';
 
@@ -37,7 +37,6 @@ class Http {
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-
         if($stream){
             curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch,$data) use ($rawFile) {
                 file_put_contents($rawFile,$data,FILE_APPEND | LOCK_EX);
@@ -46,6 +45,9 @@ class Http {
         }
 
         $response = curl_exec($ch);
+        if(!$stream){
+            file_put_contents($rawFile,$response);
+        }
 
         // Manage Response :: 
         if (!curl_errno($ch)) {

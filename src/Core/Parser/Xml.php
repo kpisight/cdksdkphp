@@ -44,7 +44,7 @@ class XmlHandler {
                         break;
                 }
             }
-            if($num===$maxChunk || $num===$nodes){
+            if(($num-1)===$maxChunk||$num===$nodes){
                 $xmlChunk .= $openingTag . $xmlData . $closingTag;
                 file_put_contents($dir . '/' . str_pad($files, 5, '0', STR_PAD_LEFT) . '.cdk', $xmlChunk);
                 $xmlData = '';
