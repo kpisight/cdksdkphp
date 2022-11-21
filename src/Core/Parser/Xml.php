@@ -6,7 +6,11 @@ class XmlHandler {
         $this->reader = new XmlReader();
     }
 
-    public function readXml($file,$dir,$responseObj,$parentTag,$maxChunk = 250){
+    public function readXml($file,$dir,$responseObj,$parentTag,$parserType = 'v2',$maxChunk = 250){
+        return $this->{$parserType}($file,$dir,$responseObj,$parentTag,$maxChunk);
+    }
+
+    public function v2($file,$dir,$responseObj,$parentTag,$maxChunk){
 
         $openingTag = '<' . $parentTag . '>';
         $closingTag = '</' . $parentTag . '>';
@@ -15,7 +19,58 @@ class XmlHandler {
         $files = 0;
         $nodes = 0;
         $xmlData = '';
-        $xmlChunk = '';
+
+        /**
+         *  @ Parse All Data Nodes ::
+         */
+        $this->reader->open($file);
+        while ($this->reader->read()){
+            $fileName = $dir . '/' . str_pad($files, 5, '0', STR_PAD_LEFT) . '.cdk';
+            if ($this->reader->nodeType == XMLReader::ELEMENT){
+                switch ($this->reader->name) {
+                    case $parentTag: break;
+                    case $responseObj:
+                        $this->saveToFile($fileName, $this->reader->readOuterXml());
+                        $num++;
+                        $nodes++;
+                        break;
+                }
+            }
+            if($num===$maxChunk){
+                echo "MININODES: " . $nodes . "\n\n";
+                $this->saveToFile($fileName,$closingTag);
+                file_put_contents($fileName, $openingTag . file_get_contents($fileName));
+                $xmlData = '';
+                $num = 0;
+                $nodes = 0;
+                $files++;
+            }
+        }
+
+        echo "NODES: " . $nodes . "\n\n";
+
+        // -- Save the last file ::
+        if($nodes!==$maxChunk){
+            echo "LAST: " . $nodes . "\n\n";
+            $this->saveToFile($fileName,$closingTag);
+            file_put_contents($fileName, $openingTag . file_get_contents($fileName));
+        }
+        
+        $this->reader->close();
+
+        return true;
+    }
+
+
+    public function v1($file,$dir,$responseObj,$parentTag,$maxChunk){
+
+        $openingTag = '<' . $parentTag . '>';
+        $closingTag = '</' . $parentTag . '>';
+
+        $num = 0;
+        $files = 0;
+        $nodes = 0;
+        $xmlData = '';
 
         /**
          *  @ Count Total Number of Nodes ::
@@ -38,22 +93,37 @@ class XmlHandler {
             if ($this->reader->nodeType == XMLReader::ELEMENT){
                 switch ($this->reader->name) {
                     case $parentTag: break;
-                    case $responseObj: 
-                        $xmlData .= '<' . $responseObj . '>' . $this->reader->readInnerXml() . '</' . $responseObj . '>';
+                    case $responseObj:
+                        $xmlData .=  $this->reader->readOuterXml();
                         $num++;
                         break;
                 }
             }
-            if(($num-1)===$maxChunk||$num===$nodes){
-                $xmlChunk .= $openingTag . $xmlData . $closingTag;
-                file_put_contents($dir . '/' . str_pad($files, 5, '0', STR_PAD_LEFT) . '.cdk', $xmlChunk);
+            if($num===$maxChunk||$num===$nodes){
+            
+                file_put_contents(
+                    $dir . '/' . str_pad($files, 5, '0', STR_PAD_LEFT) . '.cdk', 
+                    $openingTag . $xmlData . $closingTag
+                );
+
                 $xmlData = '';
-                $xmlChunk = '';
                 $num = 0;
+
                 $files++;
+
             }
         }
         $this->reader->close();
+
+        return true;
+    }
+
+
+
+    private function saveToFile($file,$data){
+        $fp = fopen($file, 'a');
+              fwrite($fp,$data);  
+              fclose($fp);  
     }
  
 
