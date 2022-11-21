@@ -65,7 +65,7 @@ class Core extends Parser {
             $response = $this->httpCache->get($data['type'],$cleanParams);
         }
         if(!$response){
-            $response = $this->http->post($data['type'],$cleanParams,$rawFile);
+            $response = $this->http->post($data['type'],$cleanParams,$rawFile,true);
         }
 
         if($this->cache && $response){
