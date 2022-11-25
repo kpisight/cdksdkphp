@@ -371,6 +371,7 @@ class ServiceRo {
             $this->FEECOST
         ];
     }
+    
     /**
      *   @ An Array Map of all fields :::
      */

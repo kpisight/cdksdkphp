@@ -244,16 +244,16 @@ class Core extends Parser {
                         }
                         else 
                         {
-                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number]);
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],false,true);
                         }
 
                     }
                 }else {
-                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V']);
+                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'],false,true);
                 }
             }else {
                 $response[$keys[$i]] = $this->cleanResponse(
-                    $this->convertBlankArrayData($data[$fields[$i]])
+                    $this->convertBlankArrayData($data[$fields[$i]]), false, true
                 );
             }
 
@@ -269,7 +269,7 @@ class Core extends Parser {
         $keys = array_keys($map);
         $count = count($fields);
         for($i=0;$i<$count;$i++){
-            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]);
+            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]],false,true);
         }
         return $response;
     }
