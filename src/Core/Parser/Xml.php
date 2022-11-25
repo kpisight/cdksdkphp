@@ -37,7 +37,6 @@ class XmlHandler {
                 }
             }
             if($num===$maxChunk){
-                echo "MININODES: " . $nodes . "\n\n";
                 $this->saveToFile($fileName,$closingTag);
                 file_put_contents($fileName, $openingTag . file_get_contents($fileName));
                 $xmlData = '';
@@ -47,11 +46,8 @@ class XmlHandler {
             }
         }
 
-        echo "NODES: " . $nodes . "\n\n";
-
         // -- Save the last file ::
         if($nodes!==$maxChunk){
-            echo "LAST: " . $nodes . "\n\n";
             $this->saveToFile($fileName,$closingTag);
             file_put_contents($fileName, $openingTag . file_get_contents($fileName));
         }
