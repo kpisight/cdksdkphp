@@ -13,7 +13,10 @@ class Helpers {
         return $data;
     }
 
-    public function cleanResponse($value,$numeric_money = false){
+    public function cleanResponse($value, $numeric_money = false, $string = false){
+        if($string){
+            return $value;
+        }
         if(is_numeric($value)){
             if($numeric_money){
                 if($value<0){
