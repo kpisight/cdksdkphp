@@ -6,7 +6,7 @@ class Http {
         public $credentials = [],
         public $headerType = 'xml',
         public $testEnv = 'uat-3pa',
-        public $liveEnv = 'uat',
+        public $liveEnv = '3pa',
         public $endpointDomain = 'dmotorworks.com',
         public $pipExtract = 'pip-extract'
     ){
