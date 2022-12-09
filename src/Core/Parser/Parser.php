@@ -6,6 +6,16 @@ class Parser extends Helpers {
 
     public function parsePartsData($item,$prtsMap){
 
+        $prtsCostSplit = [];
+        $prtsSaleSplit = [];
+
+        if(!is_array($item)){
+            return [
+                $prtsExtendedCostKey => $prtsCostSplit, 
+                $prtsExtendedSaleKey => $prtsSaleSplit
+            ];
+        }
+
         $keys = array_keys($item);
 
         $lbrLineCodes = [];
@@ -122,8 +132,6 @@ class Parser extends Helpers {
             array_push($partsLineCodeList,$lineCode); 
         }
 
-        $prtsCostSplit = [];
-        $prtsSaleSplit = [];
         $l = 0;
         foreach($partsLineCodeList as $lineItem){
             $prtsCostSplit[$lineItem][] = $this->cleanResponse($prtsExtendedCost[$l], true);
@@ -161,6 +169,7 @@ class Parser extends Helpers {
         $lbrLbrType = [];
         $lbrSequenceNo = [];
         $lbrDataLines = [];
+        $partsCostMap = [];
 
         $prtsMap = array_flip($prtsMap);
         $partCostLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDCOST];
@@ -261,7 +270,7 @@ class Parser extends Helpers {
                 }
         }
 
-        $lbrLines = $lbrLines[0];
+        $lbrLines = isset($lbrLines[0]) ? $lbrLines[0] : [];
         $partPercentages = [];
         foreach($prtPercentage as $part){
             $partPercentages[] = $part; 
