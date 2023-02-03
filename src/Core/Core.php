@@ -150,7 +150,7 @@ class Core extends Parser {
         }
 
         $extractData = [];
-        if(!in_array($items[$responseObj])){
+        if(!is_array($items[$responseObj])){
             unlink($file);
             return [
                 'status' => 'error',
