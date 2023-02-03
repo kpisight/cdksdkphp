@@ -27,7 +27,6 @@ class TestSuite {
 
     public function runTestSuite2($item,$ro){
         if($this->verbose){
-            
             if(in_array($ro, $this->investigate)){
                 echo json_encode($item, JSON_PRETTY_PRINT);
                 echo "\n\n";

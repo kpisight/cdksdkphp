@@ -17,7 +17,7 @@ class HttpCache {
     public function get($type,$params){
         $cacheFile = $this->getFileName($type,$params);
         if(is_file($cacheFile)){
-            return json_decode(file_get_contents($cacheFile), true);
+            return file_get_contents($cacheFile);
         }
         return false;
     }
