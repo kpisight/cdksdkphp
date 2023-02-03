@@ -36,7 +36,7 @@ class Http {
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
+        
         if($stream){
             curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($ch,$data) use ($rawFile) {
                 file_put_contents($rawFile,$data,FILE_APPEND | LOCK_EX);
@@ -63,7 +63,7 @@ class Http {
                 'headers' => $requestHeaders, 
                 'url' => $requestUrl
             ], 
-            'response' => $dataResponse ?? false
+            'response' => $response ?? false
         ];
 
     }

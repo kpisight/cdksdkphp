@@ -64,11 +64,15 @@ class Core extends Parser {
         if($this->cache){
             $response = $this->httpCache->get($data['type'],$cleanParams);
         }
+
         if(!$response){
-            $response = $this->http->post($data['type'],$cleanParams,$rawFile,true);
+            $response = $this->http->post($data['type'],$cleanParams,$rawFile,false);
         }
 
         if($this->cache && $response){
+            file_put_contents(
+                $rawFile, $response['response']
+            );
             $cache = $this->httpCache->save($data['type'],$cleanParams,$rawFile);
         }
 
@@ -136,6 +140,7 @@ class Core extends Parser {
 
         $responseObj = $this->types->renderTypeObj($data['type']);
         if(!isset($items[$responseObj])){
+            unlink($file);
             return [
                 'status' => 'error',
                 'message' => 'No data available for this request.',
@@ -145,6 +150,16 @@ class Core extends Parser {
         }
 
         $extractData = [];
+        if(!in_array($items[$responseObj])){
+            unlink($file);
+            return [
+                'status' => 'error',
+                'message' => 'No data available for this request.',
+                'returned' => $items,
+                'xml-response' => $response
+            ];
+        }
+
         foreach($items[$responseObj] as $item){
 
             if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
