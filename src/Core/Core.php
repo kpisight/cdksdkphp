@@ -162,8 +162,17 @@ class Core extends Parser {
 
         foreach($items[$responseObj] as $item){
 
+            if(!is_array($item)){
+                echo "An Error Has Occured, the item is a string! \n\n";
+                continue;
+            }
+
             if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
             {
+                if(!isset($item[$this->serviceRo->RONUMBER])){
+                    continue;
+                }
+                
                 $RO = $item[$this->serviceRo->RONUMBER];
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);

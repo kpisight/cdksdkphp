@@ -24,6 +24,20 @@ class XmlHandler {
          *  @ Parse All Data Nodes ::
          */
         $this->reader->open($file);
+
+
+        // -- If it isn't valid XML then end here.
+        if(!$this->reader->isValid()){
+            
+            echo "XML Validity Issue!\n\nPossible error from CDK or the data was empty. \n\n";
+
+            $fileName = $file;
+        
+            file_put_contents($fileName, $openingTag . file_get_contents($fileName) . $closingTag);
+            
+            return true;
+        }
+
         while ($this->reader->read()){
             $fileName = $dir . '/' . str_pad($files, 5, '0', STR_PAD_LEFT) . '.cdk';
             if ($this->reader->nodeType == XMLReader::ELEMENT){
