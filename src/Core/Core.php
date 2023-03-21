@@ -160,10 +160,15 @@ class Core extends Parser {
             ];
         }
 
+        if($this->isAssoc($items)){
+            $items[$responseObj] = [$items[$responseObj]];
+        }
+
         foreach($items[$responseObj] as $item){
 
             if(!is_array($item)){
                 echo "An Error Has Occured, the item is a string! \n\n";
+                echo "DEBUG DATA: " . json_encode($item, JSON_PRETTY_PRINT) . "\n\n";
                 continue;
             }
 
@@ -297,6 +302,13 @@ class Core extends Parser {
         }
         return $response;
     }
+
+    private function isAssoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+    
 
 
 
