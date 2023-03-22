@@ -160,6 +160,10 @@ class Core extends Parser {
             ];
         }
 
+        if($this->isAssoc($items[$responseObj])){
+            $items[$responseObj] = [$items[$responseObj]];
+        }
+
         foreach($items[$responseObj] as $item){
 
             if(!is_array($item)){
@@ -297,6 +301,13 @@ class Core extends Parser {
         }
         return $response;
     }
+
+    private function isAssoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+    
 
 
 
