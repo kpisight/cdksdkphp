@@ -168,7 +168,6 @@ class Core extends Parser {
 
             if(!is_array($item)){
                 echo "An Error Has Occured, the item is a string! \n\n";
-                echo "DEBUG DATA: " . json_encode($item, JSON_PRETTY_PRINT) . "\n\n";
                 continue;
             }
 
