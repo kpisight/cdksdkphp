@@ -160,7 +160,7 @@ class Core extends Parser {
             ];
         }
 
-        if($this->isAssoc($items)){
+        if($this->isAssoc($items[$responseObj])){
             $items[$responseObj] = [$items[$responseObj]];
         }
 
