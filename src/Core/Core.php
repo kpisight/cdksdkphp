@@ -99,7 +99,9 @@ class Core extends Parser {
          */
         $rawDir = __DIR__ . $this->config->rawDir() . $id;
         if(!is_dir($rawDir)){
-            mkdir($rawDir);
+            if(!$test){
+                mkdir($rawDir);
+            }
         }
 
         $responseObj = $this->types->renderTypeObj($data['type']);
@@ -110,7 +112,7 @@ class Core extends Parser {
          */
         if($test){
             $testXml = $this->xml->test($rawFile,$responseObj,$responseParentObj);
-            if(!$textXml){
+            if(!$testXml){
                 echo "ERROR! \n\n";
                 return false;
             }

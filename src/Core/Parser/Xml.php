@@ -19,19 +19,14 @@ class XmlHandler {
          *  @ Parse All Data Nodes ::
          */
         $this->reader->open($file);
-
-        if(!$this->reader->isValid()){
-            echo "XML Validity Issue!\n\nPossible error from CDK or the data was empty. \n\n";
-            $this->reader->close();
-            return false;
-        }
-
         $this->reader->close();
+
         return [
             'tags' => [
                 'open' => $openingTag,
                 'close' => $closingTag
-            ]
+            ],
+            'file' => $file
         ];
 
     }
