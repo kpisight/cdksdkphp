@@ -47,6 +47,10 @@ class Core extends Parser {
             return $this->response->errorResponse("Missing 'type' param in SDK object.", false);
         }
 
+        if($data['type'] === 'tests'){
+            return $data;
+        }
+        
         $rawObjKey = strtoupper(
             $this->makeKey(
                 $this->createRandPhrase(5)
