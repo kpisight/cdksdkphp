@@ -48,9 +48,9 @@ class Core extends Parser {
         }
 
         if($data['type'] === 'tests'){
-            return $data;
+            return $data['request']['dealerId'];
         }
-        
+
         $rawObjKey = strtoupper(
             $this->makeKey(
                 $this->createRandPhrase(5)
@@ -84,8 +84,15 @@ class Core extends Parser {
 
     }
 
-    public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []]){
+    public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []], $test){
 
+        if($test){
+            return [
+                'type' => $this->types->renderTypeObj($data['type']),
+                'parent' => $this->types->renderParentTypeObj($data['type'])
+            ];
+        }
+        
         /**
          *  @ Get the DataObject ::
          */
