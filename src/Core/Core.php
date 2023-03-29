@@ -91,7 +91,7 @@ class Core extends Parser {
          */
         $rawFile = __DIR__ . $this->config->rawDir() . $id . '.cdk';
         if($test){
-            $rawFile = $data['dealerId'];
+            $rawFile = $data['request']['dealerId'];
         }
 
         /**
