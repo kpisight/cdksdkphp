@@ -135,7 +135,7 @@ class Core extends Parser {
     }
 
 
-    public function handleDataFile($file, $data, $map){
+    public function handleDataFile($file, $data, $map, $test){
 
         $response = file_get_contents($file);
 
@@ -230,7 +230,9 @@ class Core extends Parser {
         /**
          *  @ Delete the RAW file ::
          */
-        unlink($file);
+        if(!$test){
+            unlink($file);
+        }
 
         /**
          *  @ Return the Extracted Data ::
