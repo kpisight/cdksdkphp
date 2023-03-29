@@ -10,7 +10,33 @@ class XmlHandler {
         return $this->{$parserType}($file,$dir,$responseObj,$parentTag,$maxChunk);
     }
 
-    public function v2($file,$dir,$responseObj,$parentTag,$maxChunk){
+    public function test($file,$responseObj,$parentTag){
+
+        $openingTag = '<' . $parentTag . '>';
+        $closingTag = '</' . $parentTag . '>';
+
+        /**
+         *  @ Parse All Data Nodes ::
+         */
+        $this->reader->open($file);
+
+        if(!$this->reader->isValid()){
+            echo "XML Validity Issue!\n\nPossible error from CDK or the data was empty. \n\n";
+            $this->reader->close();
+            return false;
+        }
+
+        $this->reader->close();
+        return [
+            'tags' => [
+                'open' => $openingTag,
+                'close' => $closingTag
+            ]
+        ];
+
+    }
+
+    public function v2($file,$responseObj,$parentTag,$maxChunk){
 
         $openingTag = '<' . $parentTag . '>';
         $closingTag = '</' . $parentTag . '>';
@@ -24,6 +50,8 @@ class XmlHandler {
          *  @ Parse All Data Nodes ::
          */
         $this->reader->open($file);
+
+
 
 
         // -- If it isn't valid XML then end here.

@@ -86,17 +86,13 @@ class Core extends Parser {
 
     public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []], $test){
 
-        if($test){
-            return [
-                'type' => $this->types->renderTypeObj($data['type']),
-                'parent' => $this->types->renderParentTypeObj($data['type'])
-            ];
-        }
-        
         /**
          *  @ Get the DataObject ::
          */
         $rawFile = __DIR__ . $this->config->rawDir() . $id . '.cdk';
+        if($test){
+            $rawFile = $data['dealerId'];
+        }
 
         /**
          *  @ Break Down the Chunks
@@ -110,9 +106,20 @@ class Core extends Parser {
         $responseParentObj = $this->types->renderParentTypeObj($data['type']);
 
         /**
+         *  @ Run Tests (If Set):
+         */
+        if($test){
+            $testXml = $this->xml->test($rawFile,$responseObj,$responseParentObj);
+            if(!$textXml){
+                echo "ERROR! \n\n";
+                return false;
+            }
+            return $testXml;
+        }
+
+        /**
          *  @ Save Chunked Data to Directory ::
          */
-    
         $renderAllXmlChunks = $this->xml->readXml($rawFile,$rawDir,$responseObj,$responseParentObj);
 
         $availableChunks = array_values(array_diff(scandir($rawDir), array('.', '..')));
