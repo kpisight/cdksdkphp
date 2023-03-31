@@ -31,7 +31,7 @@ class XmlHandler {
 
     }
 
-    public function v2($file,$responseObj,$parentTag,$maxChunk){
+    public function v2($file,$dir,$responseObj,$parentTag,$maxChunk){
 
         $openingTag = '<' . $parentTag . '>';
         $closingTag = '</' . $parentTag . '>';
