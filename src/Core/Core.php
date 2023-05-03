@@ -10,6 +10,7 @@ include_once __DIR__ . '/Model/Types.php';
 include_once __DIR__ . '/TestSuite/TestSuite.php';
 include_once __DIR__ . '/Parser/Parser.php';
 include_once __DIR__ . '/Parser/Xml.php';
+include_once __DIR__ . '/../Store/SharedStore.php';
 
 class Core extends Parser {
 
@@ -20,7 +21,8 @@ class Core extends Parser {
         public $testSuiteConfig = [],
         public $cache = false,
         public $cacheDir = '',
-        public $rawDir = ''
+        public $rawDir = '',
+        public $sharedDir = ''
     ){
 
         // -- Set Test Suite ::
@@ -29,6 +31,7 @@ class Core extends Parser {
         $this->setConfig();
         $this->http = new Http($this->config->global());
         $this->httpCache = new HttpCache($this->cacheDir);
+        $this->sharedStore = new SharedStore($this->sharedDir);
         $this->extract = new Extract();
         $this->response = new Response();
         $this->serviceRo = new ServiceRo();
@@ -37,7 +40,7 @@ class Core extends Parser {
         $this->xml = new XmlHandler();
     }
 
-    public function extract($data = []){
+    public function extract($data = [], $sharedFile = false, $fromStore = false){
 
         if(!isset($data['request'])){
             return $this->response->errorResponse("Missing 'request' param in SDK object.", false);
@@ -58,12 +61,19 @@ class Core extends Parser {
         );
 
         $rawFile = __DIR__ . $this->config->rawDir() . $rawObjKey . '.cdk';
-
         $cleanParams = [];
         foreach($data['request'] as $key => $value){
             $cleanParams = $this->extract->queryBuilder($cleanParams, [$key => $value]);
         }
 
+        if($fromStore){
+            $rawData = $this->sharedStore->get($data['type'],$cleanParams);
+            file_put_contents(
+                $rawFile, $rawData
+            );
+            return $rawObjKey;
+        }
+        
         $response = false;
         if($this->cache){
             $response = $this->httpCache->get($data['type'],$cleanParams);
@@ -78,6 +88,10 @@ class Core extends Parser {
                 $rawFile, $response['response']
             );
             $cache = $this->httpCache->save($data['type'],$cleanParams,$rawFile);
+        }
+
+        if($sharedFile){
+            $shared = $this->sharedStore->save($data['type'],$cleanParams,$rawFile);
         }
 
         return $rawObjKey;
