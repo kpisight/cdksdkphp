@@ -291,7 +291,9 @@ class ServiceRo {
     public $PUNTIMEOFF = 'punTimeOff'; 
     public $PUNDURATION = 'punDuration'; 
     public $PUNLINECODE = 'punLineCode'; 
-    public $PUNWORKTYPE = 'punWorkType'; 
+    public $PUNWORKTYPE = 'punWorkType';
+
+    public string $CELL = 'Cellular';
 
     /**
      * 
