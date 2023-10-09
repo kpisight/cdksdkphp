@@ -169,7 +169,7 @@ class Core extends Parser {
         $items = json_decode(
             json_encode(
                 (array)simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA)
-        ), 
+        ),
         true);
 
         $responseObj = $this->types->renderTypeObj($data['type']);
@@ -198,7 +198,8 @@ class Core extends Parser {
             $items[$responseObj] = [$items[$responseObj]];
         }
 
-        foreach($items[$responseObj] as $item){
+        foreach($items[$responseObj] as $item)
+        {
 
             if(!is_array($item)){
                 echo "An Error Has Occured, the item is a string! \n\n";
@@ -232,7 +233,14 @@ class Core extends Parser {
                 if(isset($item[$this->serviceRo->FEEOPCODE]) && isset($item[$this->serviceRo->FEEOPCODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->FEEOPCODE]['V']);
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$feeMap,$i,$partsCostMap,$this->serviceRo->feeOpCodeSkip(),true);
+                        $extractData[] =
+                            $this->parseResponse(
+                                $item,
+                                $feeMap,
+                                $i,
+                                $partsCostMap,
+                                $this->serviceRo->feeOpCodeSkip(),
+                                true);
                     }
                 }
 
@@ -265,7 +273,8 @@ class Core extends Parser {
     }
 
     
-    private function parseResponse($data,$map,$number = 0, $partsCostMap = [], $ignored = [], $isFeeLine = false, $keyNumbers = []){
+    private function parseResponse($data,$map,$number = 0, $partsCostMap = [], $ignored = [], $isFeeLine = false, $keyNumbers = [])
+    {
 
         $response = [];
         $fields = array_values($map);
@@ -279,25 +288,33 @@ class Core extends Parser {
                 continue;
             }
 
-
             if(
-                ($fields[$i] === $this->serviceRo->PRTEXTENDEDCOST) ||
-                ($fields[$i] === $this->serviceRo->PRTEXTENDEDSALE)
+                ($fields[$i] == $this->serviceRo->PRTEXTENDEDCOST) ||
+                ($fields[$i] == $this->serviceRo->PRTEXTENDEDSALE)
             ){
 
                 if($isFeeLine){
                     $response[$keys[$i]] = 0;
                 }else {
-                    if(!isset( $partsCostMap[$number][$keys[$i]])){
+                    if(!isset($partsCostMap[$number][$keys[$i]])){
                         $response[$keys[$i]] = 0;
                     }else {
                         $response[$keys[$i]] = $partsCostMap[$number][$keys[$i]];
-                    }   
+                    }
                 }
                 continue;
             }
-            
-            
+
+            if($fields[$i] == $this->serviceRo->PHONENUMBER)
+            {
+                if(isset($data[$this->serviceRo->PHONEDESC]['V']) && in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V'])){
+                    $response[$keys[$i]] = true;
+                }else {
+                    $response[$keys[$i]] = false;
+                }
+                continue;
+            }
+
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
                     if(isset($data[$fields[$i]]['V'][$number])){
@@ -344,7 +361,5 @@ class Core extends Parser {
         return array_keys($arr) !== range(0, count($arr) - 1);
     }
     
-
-
 
 }
