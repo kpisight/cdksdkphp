@@ -9,9 +9,12 @@ class Parser extends Helpers {
         $prtsCostSplit = [];
         $prtsSaleSplit = [];
 
+        $prtsExtendedCostKey = $this->serviceRo->PRTEXTENDEDCOST;
+        $prtsExtendedSaleKey = $this->serviceRo->PRTEXTENDEDSALE;
+
         if(!is_array($item)){
             return [
-                $prtsExtendedCostKey => $prtsCostSplit, 
+                $prtsExtendedCostKey => $prtsCostSplit,
                 $prtsExtendedSaleKey => $prtsSaleSplit
             ];
         }
@@ -145,8 +148,6 @@ class Parser extends Helpers {
             $prtsSaleSplit[$p] = number_format(array_sum($prtsSaleSplit[$p]), 2, '.', '');
         }
 
-        $prtsExtendedCostKey = $this->serviceRo->PRTEXTENDEDCOST;
-        $prtsExtendedSaleKey = $this->serviceRo->PRTEXTENDEDSALE;
         foreach($prtsMap as $key => $value){
             if($prtsExtendedCostKey === $value){
                 $prtsExtendedCostKey = $key;
