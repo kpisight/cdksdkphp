@@ -148,14 +148,42 @@ class Core extends Parser {
  
     }
 
-
-    public function handleDataFile($file, $data, $map, $test){
+    public function handleDataFile($file, $data, $map, $split = []){
 
         $response = file_get_contents($file);
+        $splitIndex = array_keys($split);
+
+        if($splitIndex == 0){
+            $dataResponse = $this->handleDataFileSplit($response, $data, $map, $file);
+
+            /**
+             *  @ Delete the RAW file ::
+             */
+            unlink($file);
+
+            return $dataResponse;
+        }
+
+        $dataSplit = [];
+        foreach($splitIndex as $index){
+            $dataSplit[$index] = $this->handleDataFileSplit($response, $data, $split[$index], $file);
+        }
+
+        /**
+         *  @ Delete the RAW file ::
+         */
+        unlink($file);
+
+        return $dataSplit;
+
+    }
+
+    public function handleDataFileSplit($response, $data, $map, $file)
+    {
 
         /**
          *  @ Setup Mappers ::
-        */
+         */
         $feeMap = [];
         $prtsMap = [];
         if(isset($map['fee'])){
@@ -169,8 +197,8 @@ class Core extends Parser {
         $items = json_decode(
             json_encode(
                 (array)simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA)
-        ),
-        true);
+            ),
+            true);
 
         $responseObj = $this->types->renderTypeObj($data['type']);
         if(!isset($items[$responseObj])){
@@ -211,7 +239,7 @@ class Core extends Parser {
                 if(!isset($item[$this->serviceRo->RONUMBER])){
                     continue;
                 }
-                
+
                 $RO = $item[$this->serviceRo->RONUMBER];
 
                 $extractPartsCost = $this->parsePartsData($item,$prtsMap);
@@ -250,17 +278,9 @@ class Core extends Parser {
         }
 
         /**
-         *  @ Delete the RAW file ::
-         */
-        if(!$test){
-            unlink($file);
-        }
-
-        /**
          *  @ Return the Extracted Data ::
          */
         return $extractData;
-
     }
 
 
