@@ -10,6 +10,27 @@ class XmlHandler {
         return $this->{$parserType}($file,$dir,$responseObj,$parentTag,$maxChunk);
     }
 
+    public function test($file,$responseObj,$parentTag){
+
+        $openingTag = '<' . $parentTag . '>';
+        $closingTag = '</' . $parentTag . '>';
+
+        /**
+         *  @ Parse All Data Nodes ::
+         */
+        $this->reader->open($file);
+        $this->reader->close();
+
+        return [
+            'tags' => [
+                'open' => $openingTag,
+                'close' => $closingTag
+            ],
+            'file' => $file
+        ];
+
+    }
+
     public function v2($file,$dir,$responseObj,$parentTag,$maxChunk){
 
         $openingTag = '<' . $parentTag . '>';
@@ -24,6 +45,8 @@ class XmlHandler {
          *  @ Parse All Data Nodes ::
          */
         $this->reader->open($file);
+
+
 
 
         // -- If it isn't valid XML then end here.
