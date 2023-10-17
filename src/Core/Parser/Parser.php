@@ -173,6 +173,10 @@ class Parser extends Helpers {
         $partsCostMap = [];
 
         $prtsMap = array_flip($prtsMap);
+        if(!isset($prtsMap[$this->serviceRo->PRTEXTENDEDCOST])){
+            return [];
+        }
+
         $partCostLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDCOST];
         $partSaleLabel = $prtsMap[$this->serviceRo->PRTEXTENDEDSALE];
 
