@@ -147,7 +147,7 @@ class Core extends Parser {
 
         $dataSplit = [];
         foreach($splitIndex as $index){
-            $dataSplit[$index] = $this->handleDataFileSplit($response, $data, $split[$index], $file);
+            $dataSplit[$index] = $this->handleDataFileSplit($response, $data, $split[$index]['map'], $file, $split[$index]['calc_parts']);
         }
 
         /**
@@ -159,7 +159,7 @@ class Core extends Parser {
 
     }
 
-    public function handleDataFileSplit($response, $data, $map, $file)
+    public function handleDataFileSplit($response, $data, $map, $file, $calcParts = true)
     {
 
         /**
@@ -235,7 +235,7 @@ class Core extends Parser {
                 if(isset($item[$this->serviceRo->LBRLINECODE]['V'])){
                     $lineCount = count((array)$item[$this->serviceRo->LBRLINECODE]['V']);
                     for($i=0;$i<$lineCount;$i++){
-                        $extractData[] = $this->parseResponse($item,$map,$i,$partsCostMap);
+                        $extractData[] = $this->parseResponse($item,$map,$i,$partsCostMap,$calcParts);
                     }
                 }
 
@@ -248,6 +248,7 @@ class Core extends Parser {
                                 $feeMap,
                                 $i,
                                 $partsCostMap,
+                                $calcParts,
                                 $this->serviceRo->feeOpCodeSkip(),
                                 true);
                     }
@@ -274,8 +275,9 @@ class Core extends Parser {
     }
 
     
-    private function parseResponse($data,$map,$number = 0, $partsCostMap = [], $ignored = [], $isFeeLine = false, $keyNumbers = [])
-    {
+    private function parseResponse(
+        $data, $map, $number = 0, $partsCostMap = [], $calcParts = true, $ignored = [], $isFeeLine = false
+    ){
 
         $response = [];
         $fields = array_values($map);
@@ -290,8 +292,8 @@ class Core extends Parser {
             }
 
             if(
-                ($fields[$i] == $this->serviceRo->PRTEXTENDEDCOST) ||
-                ($fields[$i] == $this->serviceRo->PRTEXTENDEDSALE)
+                (($fields[$i] == $this->serviceRo->PRTEXTENDEDCOST) ||
+                ($fields[$i] == $this->serviceRo->PRTEXTENDEDSALE)) && $calcParts
             ){
 
                 if($isFeeLine){
@@ -308,7 +310,10 @@ class Core extends Parser {
 
             if($fields[$i] == $this->serviceRo->PHONENUMBER)
             {
-                if(isset($data[$this->serviceRo->PHONEDESC]['V']) && in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V'])){
+                if(
+                    isset($data[$this->serviceRo->PHONEDESC]['V']) &&
+                    in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V']))
+                {
                     $response[$keys[$i]] = true;
                 }else {
                     $response[$keys[$i]] = false;
