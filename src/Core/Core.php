@@ -234,7 +234,7 @@ class Core extends Parser {
                 continue;
             }
 
-            if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())))
+            if($this->lines && (in_array($data['type'],$this->types->roServiceTypes())) && $calcParts)
             {
                 if(!isset($item[$this->serviceRo->RONUMBER])){
                     continue;
@@ -274,7 +274,13 @@ class Core extends Parser {
                 }
 
             }else {
-                $extractData[] = $this->parseResponseRaw($item,$map);
+                $lineCount = 1;
+                if (isset($item[$this->serviceRo->PRTLINECODE]['V'])) {
+                    $lineCount = count((array)$item[$this->serviceRo->PRTLINECODE]['V']);
+                }
+                for($i=0;$i<$lineCount;$i++) {
+                    $extractData[] = $this->parseResponseRaw($item, $map, $i);
+                }
             }
         }
 
@@ -369,14 +375,39 @@ class Core extends Parser {
     }
 
 
-    private function parseResponseRaw($data,$map){
+    private function parseResponseRaw($data,$map,$number){
         $response = [];
         $fields = array_values($map);
         $keys = array_keys($map);
         $count = count($fields);
         for($i=0;$i<$count;$i++){
-            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]],false,true);
+
+            if(isset($data[$fields[$i]]['V'])){
+                if(is_array($data[$fields[$i]]['V'])){
+                    if(isset($data[$fields[$i]]['V'][$number])){
+
+                        if(in_array($fields[$i],$this->serviceRo->asNumber()))
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],true);
+                        }
+                        else
+                        {
+                            $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'][$number],false,true);
+                        }
+
+                    }
+                }else {
+                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'],false,true);
+                }
+            }else {
+                $response[$keys[$i]] = $this->cleanResponse(
+                    $this->convertBlankArrayData($data[$fields[$i]]), false, true
+                );
+            }
+
+            //$response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]],false,true);
         }
+
         return $response;
     }
 
