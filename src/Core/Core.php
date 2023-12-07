@@ -297,6 +297,8 @@ class Core extends Parser {
                 continue;
             }
 
+
+
             if(
                 (($fields[$i] == $this->serviceRo->PRTEXTENDEDCOST) ||
                 ($fields[$i] == $this->serviceRo->PRTEXTENDEDSALE)) && $calcParts
@@ -314,22 +316,21 @@ class Core extends Parser {
                 continue;
             }
 
-            if($fields[$i] == $this->serviceRo->PHONENUMBER)
-            {
-                if(
-                    isset($data[$this->serviceRo->PHONEDESC]['V']) &&
-                    in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V']))
-                {
-                    $response[$keys[$i]] = true;
-                }else {
-                    $response[$keys[$i]] = false;
-                }
-                continue;
-            }
 
             if(isset($data[$fields[$i]]['V'])){
                 if(is_array($data[$fields[$i]]['V'])){
+
                     if(isset($data[$fields[$i]]['V'][$number])){
+
+                        if(
+                            $fields[$i] == $this->serviceRo->PHONENUMBER &&
+                            isset($data[$this->serviceRo->PHONEDESC]['V'][$number]) &&
+                            $data[$this->serviceRo->PHONEDESC]['V'][$number] == $this->serviceRo->CELL
+                        ){
+                            $response[$fields[$i]] = true;
+                        }else {
+                            $response[$fields[$i]] = false;
+                        }
 
                         if(in_array($fields[$i],$this->serviceRo->asNumber()))
                         {
@@ -342,7 +343,8 @@ class Core extends Parser {
 
                     }
                 }else {
-                    $response[$keys[$i]] = $this->cleanResponse($data[$fields[$i]]['V'],false,true);
+                    $response[$keys[$i]] =
+                            $this->cleanResponse($data[$fields[$i]]['V'], false, true);
                 }
             }else {
                 $response[$keys[$i]] = $this->cleanResponse(
