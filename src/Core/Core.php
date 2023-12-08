@@ -50,6 +50,10 @@ class Core extends Parser {
             return $this->response->errorResponse("Missing 'type' param in SDK object.", false);
         }
 
+        if($data['type'] === 'tests'){
+            return $data['request']['dealerId'];
+        }
+
         $rawObjKey = strtoupper(
             $this->makeKey(
                 $this->createRandPhrase(5)
@@ -94,28 +98,44 @@ class Core extends Parser {
 
     }
 
-    public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []]){
+    public function renderObject($id, $data = [], $map = ['master' => [], 'prtextended' => []], $test){
 
         /**
          *  @ Get the DataObject ::
          */
         $rawFile = __DIR__ . $this->config->rawDir() . $id . '.cdk';
+        if($test){
+            $rawFile = $data['request']['dealerId'];
+        }
 
         /**
          *  @ Break Down the Chunks
          */
         $rawDir = __DIR__ . $this->config->rawDir() . $id;
         if(!is_dir($rawDir)){
-            mkdir($rawDir);
+            if(!$test){
+                mkdir($rawDir);
+            }
         }
 
         $responseObj = $this->types->renderTypeObj($data['type']);
         $responseParentObj = $this->types->renderParentTypeObj($data['type']);
 
         /**
+         *  @ Run Tests (If Set):
+         */
+        if($test){
+            $testXml = $this->xml->test($rawFile,$responseObj,$responseParentObj);
+            if(!$testXml){
+                echo "ERROR! \n\n";
+                return false;
+            }
+            return $testXml;
+        }
+
+        /**
          *  @ Save Chunked Data to Directory ::
          */
-    
         $renderAllXmlChunks = $this->xml->readXml($rawFile,$rawDir,$responseObj,$responseParentObj);
 
         $availableChunks = array_values(array_diff(scandir($rawDir), array('.', '..')));
@@ -127,7 +147,6 @@ class Core extends Parser {
         return $list;
  
     }
-
 
     public function handleDataFile($file, $data, $map, $split = []){
 
@@ -316,10 +335,18 @@ class Core extends Parser {
 
             if($fields[$i] == $this->serviceRo->PHONENUMBER)
             {
+
                 if(
                     isset($data[$this->serviceRo->PHONEDESC]['V']) &&
+                    is_array($data[$this->serviceRo->PHONEDESC]['V']) &&
                     in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V']))
                 {
+                    $response[$keys[$i]] = true;
+                }
+                else if (
+                    isset($data[$this->serviceRo->PHONEDESC]['V']) &&
+                    $data[$this->serviceRo->PHONEDESC]['V'] == $this->serviceRo->CELL
+                ){
                     $response[$keys[$i]] = true;
                 }else {
                     $response[$keys[$i]] = false;
