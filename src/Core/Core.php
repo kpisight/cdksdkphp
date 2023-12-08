@@ -335,10 +335,18 @@ class Core extends Parser {
 
             if($fields[$i] == $this->serviceRo->PHONENUMBER)
             {
+
                 if(
                     isset($data[$this->serviceRo->PHONEDESC]['V']) &&
+                    is_array($data[$this->serviceRo->PHONEDESC]['V']) &&
                     in_array($this->serviceRo->CELL, $data[$this->serviceRo->PHONEDESC]['V']))
                 {
+                    $response[$keys[$i]] = true;
+                }
+                else if (
+                    isset($data[$this->serviceRo->PHONEDESC]['V']) &&
+                    $data[$this->serviceRo->PHONEDESC]['V'] == $this->serviceRo->CELL
+                ){
                     $response[$keys[$i]] = true;
                 }else {
                     $response[$keys[$i]] = false;
